@@ -1,0 +1,13 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{943F24B4-40D7-949A-7713-20B80CCF7069}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "MultiplayerMaster",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
