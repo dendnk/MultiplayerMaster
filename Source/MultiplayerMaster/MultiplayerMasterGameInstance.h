@@ -12,11 +12,18 @@ class MULTIPLAYERMASTER_API UMultiplayerMasterGameInstance
 	
 
 public:
+	UFUNCTION(BlueprintCallable)
+	void LoadMenu();
+
 	UFUNCTION(Exec)
 	void Host();
 
 	UFUNCTION(Exec)
 	void Join(const FString& InIPAddress);
+
+
+private:
+	TSubclassOf<class UUserWidget> MenuWidgetClass;
 
 
 public:
