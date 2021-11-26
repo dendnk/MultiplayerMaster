@@ -1,5 +1,5 @@
 #include "MultiplayerMasterGameInstance.h"
-#include "Blueprint/UserWidget.h"
+#include "MenuSystem/MainMenu.h"
 
 
 UMultiplayerMasterGameInstance::UMultiplayerMasterGameInstance(const FObjectInitializer& ObjectInitializer)
@@ -25,26 +25,21 @@ void UMultiplayerMasterGameInstance::LoadMenu()
 	if (!MenuWidgetClass)
 		return;
 
-	auto MenuWidget = CreateWidget<UUserWidget>(this, MenuWidgetClass);
-	if (!MenuWidget)
+	MainMenuWidget = CreateWidget<UMainMenu>(this, MenuWidgetClass);
+	if (!MainMenuWidget)
 		return;
 
-	MenuWidget->AddToViewport();
-
-	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (!PlayerController)
-		return;
-
-	FInputModeUIOnly InputModeData;
-	InputModeData.SetWidgetToFocus(MenuWidget->TakeWidget());
-	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-	PlayerController->SetInputMode(InputModeData);
-	PlayerController->SetShowMouseCursor(true);
+	MainMenuWidget->Show();
+	MainMenuWidget->SetMenuInterface(this);
 }
 
 void UMultiplayerMasterGameInstance::Host()
 {		
+	if (MainMenuWidget != nullptr)
+	{
+		MainMenuWidget->Hide();
+	}
+
 	if (!GEngine)
 		return; 
 

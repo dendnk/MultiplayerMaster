@@ -3,8 +3,11 @@
 #include "Engine/StaticMeshActor.h"
 #include "MovingPlatfrom.generated.h"
 
+
 /**
- * 
+ * Moving platform, that moves form origin position to target position and back.
+ * Has active state if number of active triggers > 0. 
+ * Logic executes on server.
  */
 UCLASS()
 class MULTIPLAYERMASTER_API AMovingPlatfrom 

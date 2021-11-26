@@ -1,12 +1,16 @@
 #pragma once
 
 #include "Engine/GameInstance.h"
+#include "MenuSystem/MenuInterface.h"
 #include "MultiplayerMasterGameInstance.generated.h"
 
-
+/**
+ * Game Instance has logic for hosting/joining and widgets.
+ */
 UCLASS()
 class MULTIPLAYERMASTER_API UMultiplayerMasterGameInstance 
 	: public UGameInstance
+	, public IMenuInterface
 {
 	GENERATED_BODY()
 	
@@ -24,6 +28,7 @@ public:
 
 private:
 	TSubclassOf<class UUserWidget> MenuWidgetClass;
+	class UMainMenu* MainMenuWidget;
 
 
 public:

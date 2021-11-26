@@ -3,6 +3,12 @@
 #include "GameFramework/Actor.h"
 #include "PlatformTrigger.generated.h"
 
+
+/**
+ * Platform trigger has links to platform.
+ * Activate linked moving platform on overlap.
+ * Linked platforms must have property ActiveTriggers == 0.
+ */
 UCLASS()
 class MULTIPLAYERMASTER_API APlatformTrigger 
 	: public AActor
