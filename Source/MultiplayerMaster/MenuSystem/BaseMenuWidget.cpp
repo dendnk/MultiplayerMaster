@@ -12,8 +12,10 @@ void UBaseMenuWidget::Show()
 	APlayerController* PlayerController = World->GetFirstPlayerController();
 	if (!PlayerController)
 		return;
+	
+	this->bIsFocusable = true;
 
-	FInputModeUIOnly InputModeData;
+	FInputModeUIOnly InputModeData;	
 	InputModeData.SetWidgetToFocus(TakeWidget());
 	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 
