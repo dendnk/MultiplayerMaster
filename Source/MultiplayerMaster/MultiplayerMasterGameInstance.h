@@ -17,7 +17,7 @@ class MULTIPLAYERMASTER_API UMultiplayerMasterGameInstance
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void LoadMenu();
+	void LoadMenuWidget();
 
 	UFUNCTION(BlueprintCallable)
 	void LoadGameMenu();

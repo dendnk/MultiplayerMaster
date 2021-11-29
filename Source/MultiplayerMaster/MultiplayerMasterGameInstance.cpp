@@ -1,6 +1,7 @@
 #include "MultiplayerMasterGameInstance.h"
 #include "MenuSystem/GameMenu.h"
 #include "MenuSystem/MainMenu.h"
+#include "OnlineSubsystem.h"
 
 
 UMultiplayerMasterGameInstance::UMultiplayerMasterGameInstance(const FObjectInitializer& ObjectInitializer)
@@ -20,13 +21,25 @@ UMultiplayerMasterGameInstance::UMultiplayerMasterGameInstance(const FObjectInit
 
 void UMultiplayerMasterGameInstance::Init()
 {
-	if (!MenuWidgetClass || !GameMenuWidgetClass)
-		return;
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
 
-	UE_LOG(LogTemp, Warning, TEXT("MenuWidgetClass : %s"), *MenuWidgetClass->GetName());
+	if (Subsystem != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Found susbsystem : %s"), *Subsystem->GetSubsystemName().ToString());
+
+		auto SessionInterface = Subsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Found session interface"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Found no susbsystem!"));
+	}	
 }
 
-void UMultiplayerMasterGameInstance::LoadMenu()
+void UMultiplayerMasterGameInstance::LoadMenuWidget()
 {
 	if (!MenuWidgetClass)
 		return;
