@@ -1,4 +1,5 @@
 #include "MultiplayerMasterGameInstance.h"
+#include "MenuSystem/GameMenu.h"
 #include "MenuSystem/MainMenu.h"
 
 
@@ -9,12 +10,17 @@ UMultiplayerMasterGameInstance::UMultiplayerMasterGameInstance(const FObjectInit
 	if (!MenuBPClass.Class)
 		return;
 
+	static ConstructorHelpers::FClassFinder<UUserWidget> GameMenuBPClass(TEXT("/Game/MenuSystem/WBP_GameMenu"));
+	if (!GameMenuBPClass.Class)
+		return;
+
 	MenuWidgetClass = MenuBPClass.Class;
+	GameMenuWidgetClass = GameMenuBPClass.Class;
 }
 
 void UMultiplayerMasterGameInstance::Init()
 {
-	if (!MenuWidgetClass)
+	if (!MenuWidgetClass || !GameMenuWidgetClass)
 		return;
 
 	UE_LOG(LogTemp, Warning, TEXT("MenuWidgetClass : %s"), *MenuWidgetClass->GetName());
@@ -31,6 +37,19 @@ void UMultiplayerMasterGameInstance::LoadMenu()
 
 	MainMenuWidget->Show();
 	MainMenuWidget->SetMenuInterface(this);
+}
+
+void UMultiplayerMasterGameInstance::LoadGameMenu()
+{
+	if (!GameMenuWidgetClass)
+		return;
+
+	GameMenuWidget = CreateWidget<UGameMenu>(this, GameMenuWidgetClass);
+	if (!GameMenuWidget)
+		return;
+
+	GameMenuWidget->Show();
+	GameMenuWidget->SetMenuInterface(this);
 }
 
 void UMultiplayerMasterGameInstance::Host()
@@ -54,6 +73,11 @@ void UMultiplayerMasterGameInstance::Host()
 
 void UMultiplayerMasterGameInstance::Join(const FString& InIPAddress)
 {
+	if (MainMenuWidget != nullptr)
+	{
+		MainMenuWidget->Hide();
+	}
+
 	if (!GEngine)
 		return;
 
@@ -64,4 +88,24 @@ void UMultiplayerMasterGameInstance::Join(const FString& InIPAddress)
 		return;
 
 	PlayerController->ClientTravel(InIPAddress, ETravelType::TRAVEL_Absolute);
+}
+
+void UMultiplayerMasterGameInstance::LoadMainMenu()
+{	
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+	if (!PlayerController)
+		return;
+
+	if (PlayerController->HasAuthority())
+	{
+		auto World = GetWorld();
+		if (!World)
+			return;
+
+		World->ServerTravel(TEXT("/Game/MenuSystem/MainMenu"));
+	}
+	else
+	{
+		PlayerController->ClientTravel(TEXT("/Game/MenuSystem/MainMenu"), ETravelType::TRAVEL_Absolute);
+	}	   
 }

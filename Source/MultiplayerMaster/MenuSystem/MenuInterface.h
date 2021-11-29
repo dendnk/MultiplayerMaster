@@ -11,7 +11,7 @@ class UMenuInterface : public UInterface
 };
 
 /** 
- * Menu interface need to implement menu logic in game
+ * Menu interface need to be implemented in game (in game instance)
  */
 class MULTIPLAYERMASTER_API IMenuInterface
 {
@@ -20,4 +20,6 @@ class MULTIPLAYERMASTER_API IMenuInterface
 
 public:
 	virtual void Host() = 0;
+	virtual void Join(const FString& Address) = 0;
+	virtual void LoadMainMenu() = 0;;
 };

@@ -19,16 +19,26 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LoadMenu();
 
+	UFUNCTION(BlueprintCallable)
+	void LoadGameMenu();
+
+
+public: // IMenuInterface
 	UFUNCTION(Exec)
-	void Host();
+	void Host() override;
 
 	UFUNCTION(Exec)
-	void Join(const FString& InIPAddress);
+	void Join(const FString& InIPAddress) override;
+
+	void LoadMainMenu() override;	
 
 
 private:
-	TSubclassOf<class UUserWidget> MenuWidgetClass;
+	TSubclassOf<class UBaseMenuWidget> MenuWidgetClass;
+	TSubclassOf<class UBaseMenuWidget> GameMenuWidgetClass;
+
 	class UMainMenu* MainMenuWidget;
+	class UGameMenu* GameMenuWidget;
 
 
 public:

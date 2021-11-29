@@ -1,18 +1,24 @@
 #include "MainMenu.h"
 #include "Components/Button.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/EditableTextBox.h"
 
 
 bool UMainMenu::Initialize()
 {
 	bool bIsSuccess = Super::Initialize();
 	if (!bIsSuccess ||
-		!HostButton ||
-		!JoinButton)
+		!HostButton || !JoinButton || !JoinMenuButton || !ReturnToMainMenuButton || !QuitGameButton)
 		return false;
 	
-	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);	
 	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
 
+	JoinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
+	ReturnToMainMenuButton->OnClicked.AddDynamic(this, &UMainMenu::ReturnToMainMenu);
+
+	QuitGameButton->OnClicked.AddDynamic(this, &UMainMenu::QuitGame);
+	
 	return true;
 }
 
@@ -26,18 +32,36 @@ void UMainMenu::HostServer()
 
 void UMainMenu::JoinServer()
 {
-	UE_LOG(LogTemp, Warning, TEXT("I'm gonna join to the server!"));
+	if (MenuInterface)
+	{
+		if (!IPAddressField)
+			return;
+
+		const FString& Address = IPAddressField->GetText().ToString();
+		MenuInterface->Join(Address);
+
+		UE_LOG(LogTemp, Warning, TEXT("I'm gonna join to the server with ip : %s!"), *Address);
+	}	
 }
 
-void UMainMenu::SetMenuInterface(IMenuInterface* InMenuInterface)
+void UMainMenu::OpenJoinMenu()
 {
-	MenuInterface = InMenuInterface;
+	if (!MenuSwitcher || !JoinMenuWidget)
+		return;
+
+	MenuSwitcher->SetActiveWidget(JoinMenuWidget);
 }
 
-void UMainMenu::Show()
+void UMainMenu::ReturnToMainMenu()
 {
-	AddToViewport();
+	if (!MenuSwitcher || !MainMenuWidget)
+		return;
 
+	MenuSwitcher->SetActiveWidget(MainMenuWidget);
+}
+
+void UMainMenu::QuitGame()
+{
 	auto World = GetWorld();
 	if (!World)
 		return;
@@ -46,27 +70,5 @@ void UMainMenu::Show()
 	if (!PlayerController)
 		return;
 
-	FInputModeUIOnly InputModeData;
-	InputModeData.SetWidgetToFocus(TakeWidget());
-	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-	PlayerController->SetInputMode(InputModeData);
-	PlayerController->SetShowMouseCursor(true);
-}
-
-void UMainMenu::Hide()
-{
-	RemoveFromViewport();
-
-	auto World = GetWorld();
-	if (!World)
-		return;
-
-	APlayerController* PlayerController = World->GetFirstPlayerController();
-	if (!PlayerController)
-		return;
-
-	FInputModeGameOnly InputModeData;
-	PlayerController->SetInputMode(InputModeData);
-	PlayerController->SetShowMouseCursor(false);
+	PlayerController->ConsoleCommand(TEXT("quit"));
 }
