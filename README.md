@@ -1,2 +1,2 @@
 # MultiplayerMaster
-MultiplayerMaster - work project from Udemy course "Unreal C++ Multiplayer Master: Intermediate Game Development"
+MultiplayerMaster - work project for Udemy course "Unreal C++ Multiplayer Master: Intermediate Game Development"
