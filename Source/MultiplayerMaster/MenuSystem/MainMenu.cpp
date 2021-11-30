@@ -1,8 +1,18 @@
 #include "MainMenu.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
-#include "Components/EditableTextBox.h"
+#include "ServerRow.h"
 
+
+UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	static ConstructorHelpers::FClassFinder<UUserWidget> ServerRowBPClass(TEXT("/Game/MenuSystem/WBP_ServerRow"));
+	if (!ServerRowBPClass.Class)
+		return;
+
+	ServerRowClass = ServerRowBPClass.Class;
+}
 
 bool UMainMenu::Initialize()
 {
@@ -30,18 +40,44 @@ void UMainMenu::HostServer()
 	}	
 }
 
-void UMainMenu::JoinServer()
+void UMainMenu::SetServerList(const TArray<FString>& ServerNames)
 {
-	if (MenuInterface)
+	auto World = GetWorld();
+	if (!World)
+		return;
+
+	ServerList->ClearChildren();
+
+	uint32 Index = 0;
+	for (const auto& ServerName : ServerNames)
 	{
-		if (!IPAddressField)
+		UServerRow* Row = CreateWidget<UServerRow>(World, ServerRowClass);
+		if (!Row)
 			return;
 
-		const FString& Address = IPAddressField->GetText().ToString();
-		MenuInterface->Join(Address);
+		Row->ServerName->SetText(FText::FromString(ServerName));
+		Row->Setup(this, Index++);
+		
+		ServerList->AddChild(Row);	
+	}
+}
 
-		UE_LOG(LogTemp, Warning, TEXT("I'm gonna join to the server with ip : %s!"), *Address);
-	}	
+void UMainMenu::SelectIndex(uint32 Index)
+{
+	SelectedIndex = Index;
+}
+
+void UMainMenu::JoinServer()
+{
+	if (SelectedIndex.IsSet() && MenuInterface != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Selected Index : %d"), SelectedIndex.GetValue());
+		MenuInterface->Join( SelectedIndex.GetValue());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Selected Index not set"));
+	}
 }
 
 void UMainMenu::OpenJoinMenu()
@@ -50,6 +86,11 @@ void UMainMenu::OpenJoinMenu()
 		return;
 
 	MenuSwitcher->SetActiveWidget(JoinMenuWidget);
+	
+	if (MenuInterface != nullptr)
+	{
+		MenuInterface->RefreshServerList();
+	}
 }
 
 void UMainMenu::ReturnToMainMenu()

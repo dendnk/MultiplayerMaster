@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/GameInstance.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "MenuSystem/MenuInterface.h"
 #include "MultiplayerMasterGameInstance.generated.h"
 
@@ -16,6 +17,11 @@ class MULTIPLAYERMASTER_API UMultiplayerMasterGameInstance
 	
 
 public:
+	UPROPERTY(EditAnywhere)
+	FName GameSessionName = TEXT("My Session Game");
+
+
+public:
 	UFUNCTION(BlueprintCallable)
 	void LoadMenuWidget();
 
@@ -28,18 +34,30 @@ public: // IMenuInterface
 	void Host() override;
 
 	UFUNCTION(Exec)
-	void Join(const FString& InIPAddress) override;
+	void Join(uint32 Index) override;
 
-	void LoadMainMenu() override;	
+	void LoadMainMenu() override;
+	void RefreshServerList() override;	
 
 
 private:
-	TSubclassOf<class UBaseMenuWidget> MenuWidgetClass;
-	TSubclassOf<class UBaseMenuWidget> GameMenuWidgetClass;
+	TSubclassOf<class UUserWidget> MenuWidgetClass;
+	TSubclassOf<class UUserWidget> GameMenuWidgetClass;
 
 	class UMainMenu* MainMenuWidget;
 	class UGameMenu* GameMenuWidget;
 
+	IOnlineSessionPtr SessionInterface;
+	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
+
+
+private:
+	void CreateSession();
+	void OnCreateSessionComplete(FName SessionName, bool bSuccess);
+	void OnDestroySessionComplete(FName SessionName, bool bSuccess);
+	void OnFindSessionsComplete(bool bSuccess);
+	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+	
 
 public:
 	UMultiplayerMasterGameInstance(const FObjectInitializer& ObjectInitializer);

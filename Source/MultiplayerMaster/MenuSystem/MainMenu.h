@@ -37,10 +37,15 @@ private:
 	class UButton* ReturnToMainMenuButton;
 
 	UPROPERTY(Meta = (BindWidget))
-	class UEditableTextBox* IPAddressField;
+	class UPanelWidget* ServerList;
 
 	UPROPERTY(Meta = (BindWidget))
 	class UButton* QuitGameButton;
+
+
+private:
+	TSubclassOf<class UUserWidget> ServerRowClass;
+	TOptional<uint32> SelectedIndex;	
 
 
 private:
@@ -59,6 +64,12 @@ private:
 	UFUNCTION()
 	void QuitGame();
 
+
+public:
+	UMainMenu(const FObjectInitializer& ObjectInitializer);
+	void SetServerList(const TArray<FString>& ServerNames);
+	void SelectIndex(uint32 Index);
+	
 
 protected:
 	virtual bool Initialize() override;

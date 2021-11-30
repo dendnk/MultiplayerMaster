@@ -2,6 +2,7 @@
 #include "MenuSystem/GameMenu.h"
 #include "MenuSystem/MainMenu.h"
 #include "OnlineSubsystem.h"
+#include "OnlineSessionSettings.h"
 
 
 UMultiplayerMasterGameInstance::UMultiplayerMasterGameInstance(const FObjectInitializer& ObjectInitializer)
@@ -27,16 +28,169 @@ void UMultiplayerMasterGameInstance::Init()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Found susbsystem : %s"), *Subsystem->GetSubsystemName().ToString());
 
-		auto SessionInterface = Subsystem->GetSessionInterface();
+		SessionInterface = Subsystem->GetSessionInterface();
 		if (SessionInterface.IsValid())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Found session interface"));
+			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnCreateSessionComplete);
+			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnDestroySessionComplete);
+			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnFindSessionsComplete);
+			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnJoinSessionComplete);
+			
 		}
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Found no susbsystem!"));
 	}	
+}
+
+void UMultiplayerMasterGameInstance::Host()
+{
+	if (SessionInterface.IsValid())
+	{
+		const auto ExistingSession = SessionInterface->GetNamedSession(GameSessionName);
+		if (ExistingSession != nullptr)
+		{
+			SessionInterface->DestroySession(GameSessionName);
+		}
+		else
+		{
+			CreateSession();
+		}
+	}
+}
+
+void UMultiplayerMasterGameInstance::Join(uint32 Index)
+{
+	if (!SessionInterface.IsValid() || !SessionSearch.IsValid())
+		return;
+	
+	if (MainMenuWidget != nullptr)
+	{
+		MainMenuWidget->Hide();
+	}
+	
+	SessionInterface->JoinSession(0, GameSessionName, SessionSearch->SearchResults[Index]);
+}
+
+void UMultiplayerMasterGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+{
+	if (!SessionInterface.IsValid())
+		return;
+
+	FString Address;
+	
+	if (!SessionInterface->GetResolvedConnectString(SessionName, Address))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not get connect string!"));
+		return;
+	}
+
+	auto Engine = GetEngine();
+	if (!Engine)
+		return;
+	
+	Engine->AddOnScreenDebugMessage(0, 2.0f, FColor::Blue, FString::Printf(TEXT("Joining to : %s"), *Address));	
+	
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+	if (!PlayerController)
+		return;
+	
+	PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);	
+}
+
+void UMultiplayerMasterGameInstance::LoadMainMenu()
+{	
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+	if (!PlayerController)
+		return;
+
+	if (PlayerController->HasAuthority())
+	{
+		auto World = GetWorld();
+		if (!World)
+			return;
+
+		World->ServerTravel(TEXT("/Game/MenuSystem/MainMenu"));
+	}
+	else
+	{
+		PlayerController->ClientTravel(TEXT("/Game/MenuSystem/MainMenu"), ETravelType::TRAVEL_Absolute);
+	}	   
+}
+
+void UMultiplayerMasterGameInstance::CreateSession()
+{
+	if (SessionInterface.IsValid())
+	{
+		FOnlineSessionSettings SessionSettings;
+		SessionSettings.bIsLANMatch = true;
+		SessionSettings.NumPublicConnections = 2;
+		SessionSettings.bShouldAdvertise = true;
+		
+		SessionInterface->CreateSession(0, GameSessionName, SessionSettings);		
+	}
+}
+
+void UMultiplayerMasterGameInstance::OnCreateSessionComplete(FName SessionName, bool bSuccess)
+{
+	if (!bSuccess)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not create session!"));
+		return;
+	}
+	
+	if (MainMenuWidget != nullptr)
+	{
+		MainMenuWidget->Hide();
+	}
+
+	if (!GEngine)
+		return; 
+
+	GEngine->AddOnScreenDebugMessage(0, 2.0f, FColor::Blue, TEXT("Hosting"));
+
+	auto World = GetWorld();
+	if (!World)
+		return;
+
+	World->ServerTravel(TEXT("/Game/MultiplayerMaster/Maps/Map?listen"));
+}
+
+void UMultiplayerMasterGameInstance::OnDestroySessionComplete(FName SessionName, bool bSuccess)
+{
+	if (bSuccess)
+	{
+		CreateSession();
+	}
+}
+
+void UMultiplayerMasterGameInstance::RefreshServerList()
+{
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	if (SessionSearch.IsValid())
+	{
+		SessionSearch->bIsLanQuery = true;
+		UE_LOG(LogTemp, Warning, TEXT("Starting find session"));
+		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());	
+	}
+}
+
+void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
+{
+	if (bSuccess && SessionSearch.IsValid() && MainMenuWidget != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Finish find session"));
+		
+		TArray<FString> ServerNames;
+		for (const auto& Result : SessionSearch->SearchResults)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Result.GetSessionIdStr());
+			ServerNames.Add(Result.GetSessionIdStr());
+		}
+
+		MainMenuWidget->SetServerList(ServerNames);
+	}
 }
 
 void UMultiplayerMasterGameInstance::LoadMenuWidget()
@@ -63,62 +217,4 @@ void UMultiplayerMasterGameInstance::LoadGameMenu()
 
 	GameMenuWidget->Show();
 	GameMenuWidget->SetMenuInterface(this);
-}
-
-void UMultiplayerMasterGameInstance::Host()
-{		
-	if (MainMenuWidget != nullptr)
-	{
-		MainMenuWidget->Hide();
-	}
-
-	if (!GEngine)
-		return; 
-
-	GEngine->AddOnScreenDebugMessage(0, 2.0f, FColor::Blue, TEXT("Hosting"));
-
-	auto World = GetWorld();
-	if (!World)
-		return;
-
-	World->ServerTravel(TEXT("/Game/MultiplayerMaster/Maps/Map?listen"));
-}
-
-void UMultiplayerMasterGameInstance::Join(const FString& InIPAddress)
-{
-	if (MainMenuWidget != nullptr)
-	{
-		MainMenuWidget->Hide();
-	}
-
-	if (!GEngine)
-		return;
-
-	GEngine->AddOnScreenDebugMessage(0, 2.0f, FColor::Blue, FString::Printf(TEXT("Joining to : %s"), *InIPAddress));	
-
-	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (!PlayerController)
-		return;
-
-	PlayerController->ClientTravel(InIPAddress, ETravelType::TRAVEL_Absolute);
-}
-
-void UMultiplayerMasterGameInstance::LoadMainMenu()
-{	
-	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (!PlayerController)
-		return;
-
-	if (PlayerController->HasAuthority())
-	{
-		auto World = GetWorld();
-		if (!World)
-			return;
-
-		World->ServerTravel(TEXT("/Game/MenuSystem/MainMenu"));
-	}
-	else
-	{
-		PlayerController->ClientTravel(TEXT("/Game/MenuSystem/MainMenu"), ETravelType::TRAVEL_Absolute);
-	}	   
 }
