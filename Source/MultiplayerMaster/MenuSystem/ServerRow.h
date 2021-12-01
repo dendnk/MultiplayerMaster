@@ -18,24 +18,43 @@ public:
 	UPROPERTY(Meta = (BindWidget))
 	class UTextBlock* ServerName;
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bSelected = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor SelectedAndHoveredButtonColor = FLinearColor::Blue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor SelectedAndNonHoveredButtonColor = FLinearColor::Green;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor NonSelectedAndHoveredButtonColor = FLinearColor::Yellow;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor NonSelectedAndNonHoveredButtonColor = FLinearColor::White;
+
 
 private:
 	UPROPERTY(Meta = (BindWidget))
 	class UButton* RowButton;
-
+	
 	UPROPERTY()
 	class UMainMenu* Parent;
 
 
 private:
 	uint32 Index;
-	
-	
+
+
 private:
 	UFUNCTION()
 	void OnClicked();
 
 
 public:
-	void Setup(class UMainMenu* Parent, uint32 Index); 
+	void Setup(class UMainMenu* Parent, uint32 Index);
+
+
+protected:
+	virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
 };

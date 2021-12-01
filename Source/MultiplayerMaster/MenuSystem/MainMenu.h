@@ -42,6 +42,9 @@ private:
 	UPROPERTY(Meta = (BindWidget))
 	class UButton* QuitGameButton;
 
+	UPROPERTY(Meta = (BindWidget))
+	class UWidget* SessionsWaitWidget;
+
 
 private:
 	TSubclassOf<class UUserWidget> ServerRowClass;
@@ -64,6 +67,10 @@ private:
 	UFUNCTION()
 	void QuitGame();
 
+
+private:
+	void UpdateChildren();
+	
 
 public:
 	UMainMenu(const FObjectInitializer& ObjectInitializer);

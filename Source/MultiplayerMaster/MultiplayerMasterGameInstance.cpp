@@ -64,6 +64,13 @@ void UMultiplayerMasterGameInstance::Join(uint32 Index)
 {
 	if (!SessionInterface.IsValid() || !SessionSearch.IsValid())
 		return;
+
+	auto SearchResults = SessionSearch->SearchResults;
+	if (SearchResults.Num() == 0 || !SearchResults.IsValidIndex(Index))
+	{
+		UE_LOG(LogTemp,Warning,TEXT("1) There are no search results from session search to join\n 2) Selected index not valid!"));
+		return;
+	}
 	
 	if (MainMenuWidget != nullptr)
 	{
@@ -124,9 +131,11 @@ void UMultiplayerMasterGameInstance::CreateSession()
 	if (SessionInterface.IsValid())
 	{
 		FOnlineSessionSettings SessionSettings;
-		SessionSettings.bIsLANMatch = true;
+		SessionSettings.bIsLANMatch = false;
 		SessionSettings.NumPublicConnections = 2;
 		SessionSettings.bShouldAdvertise = true;
+		SessionSettings.bUsesPresence = true;
+		SessionSettings.bUseLobbiesIfAvailable = true;
 		
 		SessionInterface->CreateSession(0, GameSessionName, SessionSettings);		
 	}
@@ -171,6 +180,8 @@ void UMultiplayerMasterGameInstance::RefreshServerList()
 	if (SessionSearch.IsValid())
 	{
 		SessionSearch->bIsLanQuery = true;
+		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		UE_LOG(LogTemp, Warning, TEXT("Starting find session"));
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());	
 	}
@@ -183,6 +194,9 @@ void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
 		UE_LOG(LogTemp, Warning, TEXT("Finish find session"));
 		
 		TArray<FString> ServerNames;
+		ServerNames.Add("Test server 1");
+		ServerNames.Add("Test server 2");
+		ServerNames.Add("Test server 3");
 		for (const auto& Result : SessionSearch->SearchResults)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Result.GetSessionIdStr());

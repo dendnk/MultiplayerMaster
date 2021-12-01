@@ -47,6 +47,7 @@ void UMainMenu::SetServerList(const TArray<FString>& ServerNames)
 		return;
 
 	ServerList->ClearChildren();
+	SessionsWaitWidget->SetVisibility(ESlateVisibility::Hidden);
 
 	uint32 Index = 0;
 	for (const auto& ServerName : ServerNames)
@@ -65,6 +66,18 @@ void UMainMenu::SetServerList(const TArray<FString>& ServerNames)
 void UMainMenu::SelectIndex(uint32 Index)
 {
 	SelectedIndex = Index;
+	UpdateChildren();
+}
+
+void UMainMenu::UpdateChildren()
+{
+	for (int32 i = 0; i < ServerList->GetChildrenCount(); ++i)
+	{
+		if (const auto ServerRow = Cast<UServerRow>(ServerList->GetChildAt(i)))
+		{
+			ServerRow->bSelected = (SelectedIndex.IsSet() && SelectedIndex.GetValue() == i);
+		}
+	}
 }
 
 void UMainMenu::JoinServer()
@@ -86,6 +99,9 @@ void UMainMenu::OpenJoinMenu()
 		return;
 
 	MenuSwitcher->SetActiveWidget(JoinMenuWidget);
+
+	ServerList->ClearChildren();
+	SessionsWaitWidget->SetVisibility(ESlateVisibility::Visible);
 	
 	if (MenuInterface != nullptr)
 	{
