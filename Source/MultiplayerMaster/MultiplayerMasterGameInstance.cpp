@@ -207,10 +207,11 @@ void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
 			UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Result.GetSessionIdStr());
 			FServerData Data;
 			Data.Name = Result.GetSessionIdStr();
-			Data.CurrentPlayers = Result.Session.NumOpenPublicConnections;
-			Data.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
 			Data.HostUsername = Result.Session.OwningUserName;
-				
+			Data.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
+			Data.CurrentPlayers = Data.MaxPlayers - Result.Session.NumOpenPublicConnections;
+			Data.PingInMs = Result.PingInMs;
+			
 			ServerDatas.Add(Data);
 		}
 

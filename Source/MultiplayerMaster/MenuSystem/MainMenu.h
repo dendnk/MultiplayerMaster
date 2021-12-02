@@ -20,6 +20,8 @@ struct FServerData
 	uint16 MaxPlayers;
 	
 	FString HostUsername;
+
+	int32 PingInMs;
 };
 
 /**

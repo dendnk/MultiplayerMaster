@@ -15,31 +15,34 @@ void UServerRow::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
 
-	FLinearColor ButtonColor;
-	if (IsHovered())
+	if (!bIsHeader)
 	{
-		if (bSelected)
+		FLinearColor ButtonColor;
+		if (IsHovered())
 		{
-			ButtonColor = SelectedAndHoveredButtonColor;
+			if (bSelected)
+			{
+				ButtonColor = SelectedAndHoveredButtonColor;
+			}
+			else
+			{
+				ButtonColor = NonSelectedAndHoveredButtonColor;
+			}			
 		}
 		else
 		{
-			ButtonColor = NonSelectedAndHoveredButtonColor;
-		}			
-	}
-	else
-	{
-		if (bSelected)
-		{
-			ButtonColor = SelectedAndNonHoveredButtonColor;
+			if (bSelected)
+			{
+				ButtonColor = SelectedAndNonHoveredButtonColor;
+			}
+			else
+			{
+				ButtonColor = NonSelectedAndNonHoveredButtonColor; 
+			}
 		}
-		else
-		{
-			ButtonColor = NonSelectedAndNonHoveredButtonColor; 
-		}
-	}
 
-	RowButton->SetColorAndOpacity(ButtonColor);
+		RowButton->SetColorAndOpacity(ButtonColor);	
+	}
 }
 
 void UServerRow::OnClicked()

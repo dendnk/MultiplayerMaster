@@ -24,19 +24,25 @@ public:
 	UPROPERTY(Meta = (BindWidget))
 	class UTextBlock* ConnectionFraction;
 
+	UPROPERTY(Meta = (BindWidget))
+	class UTextBlock* Ping;
+
 	UPROPERTY(BlueprintReadOnly)
 	bool bSelected = false;
+	
+	UPROPERTY(EditAnywhere)
+	bool bIsHeader = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
 	FLinearColor SelectedAndHoveredButtonColor = FLinearColor::Blue;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
 	FLinearColor SelectedAndNonHoveredButtonColor = FLinearColor::Green;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
 	FLinearColor NonSelectedAndHoveredButtonColor = FLinearColor::Yellow;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
 	FLinearColor NonSelectedAndNonHoveredButtonColor = FLinearColor::White;
 
 

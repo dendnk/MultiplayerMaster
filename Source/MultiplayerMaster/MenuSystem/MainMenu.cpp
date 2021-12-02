@@ -60,6 +60,8 @@ void UMainMenu::SetServerList(const TArray<FServerData>& ServerDatas)
 		Row->HostUsername->SetText(FText::FromString(ServerData.HostUsername));
 		FString FractionString = FString::Printf(TEXT("%d / %d"),ServerData.CurrentPlayers, ServerData.MaxPlayers); 
 		Row->ConnectionFraction->SetText(FText::FromString(FractionString));
+		FString PingText = FString::Printf(TEXT("%d ms"), ServerData.PingInMs);
+		Row->Ping->SetText(FText::FromString(PingText));
 		
 		Row->Setup(this, Index++);
 		
