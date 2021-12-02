@@ -40,7 +40,7 @@ void UMainMenu::HostServer()
 	}	
 }
 
-void UMainMenu::SetServerList(const TArray<FString>& ServerNames)
+void UMainMenu::SetServerList(const TArray<FServerData>& ServerDatas)
 {
 	auto World = GetWorld();
 	if (!World)
@@ -50,13 +50,17 @@ void UMainMenu::SetServerList(const TArray<FString>& ServerNames)
 	SessionsWaitWidget->SetVisibility(ESlateVisibility::Hidden);
 
 	uint32 Index = 0;
-	for (const auto& ServerName : ServerNames)
+	for (const auto& ServerData : ServerDatas)
 	{
 		UServerRow* Row = CreateWidget<UServerRow>(World, ServerRowClass);
 		if (!Row)
 			return;
 
-		Row->ServerName->SetText(FText::FromString(ServerName));
+		Row->ServerName->SetText(FText::FromString(ServerData.Name));
+		Row->HostUsername->SetText(FText::FromString(ServerData.HostUsername));
+		FString FractionString = FString::Printf(TEXT("%d / %d"),ServerData.CurrentPlayers, ServerData.MaxPlayers); 
+		Row->ConnectionFraction->SetText(FText::FromString(FractionString));
+		
 		Row->Setup(this, Index++);
 		
 		ServerList->AddChild(Row);	

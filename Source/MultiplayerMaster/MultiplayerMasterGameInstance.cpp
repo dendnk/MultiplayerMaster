@@ -131,7 +131,15 @@ void UMultiplayerMasterGameInstance::CreateSession()
 	if (SessionInterface.IsValid())
 	{
 		FOnlineSessionSettings SessionSettings;
-		SessionSettings.bIsLANMatch = false;
+		if (IOnlineSubsystem::Get()->GetSubsystemName() == TEXT("NULL"))
+		{
+			SessionSettings.bIsLANMatch = true;
+		}
+		else
+		{
+			SessionSettings.bIsLANMatch = false;
+		}
+		
 		SessionSettings.NumPublicConnections = 2;
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
@@ -193,17 +201,20 @@ void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Finish find session"));
 		
-		TArray<FString> ServerNames;
-		ServerNames.Add("Test server 1");
-		ServerNames.Add("Test server 2");
-		ServerNames.Add("Test server 3");
+		TArray<FServerData> ServerDatas;
 		for (const auto& Result : SessionSearch->SearchResults)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Result.GetSessionIdStr());
-			ServerNames.Add(Result.GetSessionIdStr());
+			FServerData Data;
+			Data.Name = Result.GetSessionIdStr();
+			Data.CurrentPlayers = Result.Session.NumOpenPublicConnections;
+			Data.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
+			Data.HostUsername = Result.Session.OwningUserName;
+				
+			ServerDatas.Add(Data);
 		}
 
-		MainMenuWidget->SetServerList(ServerNames);
+		MainMenuWidget->SetServerList(ServerDatas);
 	}
 }
 

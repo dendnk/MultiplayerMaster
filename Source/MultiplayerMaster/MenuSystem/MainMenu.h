@@ -5,6 +5,24 @@
 
 
 /**
+ *  Server data struct
+ */
+USTRUCT()
+struct FServerData
+{
+	GENERATED_BODY()
+
+	
+	FString Name;
+	
+	uint16 CurrentPlayers;
+	
+	uint16 MaxPlayers;
+	
+	FString HostUsername;
+};
+
+/**
  * Main Menu Widget
  */
 UCLASS()
@@ -74,7 +92,7 @@ private:
 
 public:
 	UMainMenu(const FObjectInitializer& ObjectInitializer);
-	void SetServerList(const TArray<FString>& ServerNames);
+	void SetServerList(const TArray<FServerData>& ServerDatas);
 	void SelectIndex(uint32 Index);
 	
 

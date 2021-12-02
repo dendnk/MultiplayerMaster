@@ -18,6 +18,12 @@ public:
 	UPROPERTY(Meta = (BindWidget))
 	class UTextBlock* ServerName;
 
+	UPROPERTY(Meta = (BindWidget))
+	class UTextBlock* HostUsername;
+
+	UPROPERTY(Meta = (BindWidget))
+	class UTextBlock* ConnectionFraction;
+
 	UPROPERTY(BlueprintReadOnly)
 	bool bSelected = false;
 
