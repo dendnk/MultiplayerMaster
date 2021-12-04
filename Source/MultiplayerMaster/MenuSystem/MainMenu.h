@@ -35,35 +35,50 @@ class MULTIPLAYERMASTER_API UMainMenu
 
 
 private:
-	UPROPERTY(Meta = (BindWidget))
-	class UButton* HostButton;
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = MainMenu)
+	class UWidgetSwitcher* MenuSwitcher;
 
-	UPROPERTY(Meta = (BindWidget))
-	class UButton* JoinButton;
-
-	UPROPERTY(Meta = (BindWidget))
-	class UWidgetSwitcher* MenuSwitcher;	
-
-	UPROPERTY(Meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = MainMenu)
 	class UWidget* MainMenuWidget;
 
-	UPROPERTY(Meta = (BindWidget))
-	class UWidget* JoinMenuWidget;
-
-	UPROPERTY(Meta = (BindWidget))
-	class UButton* JoinMenuButton;
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = MainMenu)
+	class UButton* HostMenuButton;
 	
-	UPROPERTY(Meta = (BindWidget))
-	class UButton* ReturnToMainMenuButton;
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = MainMenu)
+	class UButton* JoinMenuButton;
 
-	UPROPERTY(Meta = (BindWidget))
-	class UPanelWidget* ServerList;
-
-	UPROPERTY(Meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = MainMenu)
 	class UButton* QuitGameButton;
 
-	UPROPERTY(Meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
+	class UWidget* HostMenuWidget;
+	
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
+	class UEditableTextBox* ServerNameTextBox;
+
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
+	class UButton* HostButton;
+	
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
+	class UButton* HostMenuCancelButton;
+
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
+	class UWidget* JoinMenuWidget;
+
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
+	class UPanelWidget* ServerList;
+
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
 	class UWidget* SessionsWaitWidget;
+
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
+	class UButton* JoinButton;
+
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
+	class UButton* RefreshButton;
+	
+	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
+	class UButton* JoinMenuCancelButton;
 
 
 private:
@@ -79,8 +94,14 @@ private:
 	void JoinServer();
 
 	UFUNCTION()
+	void OpenHostMenu();
+	
+	UFUNCTION()
 	void OpenJoinMenu();
 
+	UFUNCTION()
+	void RefreshServerList();
+	
 	UFUNCTION()
 	void ReturnToMainMenu();
 

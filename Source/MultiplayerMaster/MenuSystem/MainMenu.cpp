@@ -2,6 +2,7 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "ServerRow.h"
+#include "Components/EditableTextBox.h"
 
 
 UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
@@ -18,25 +19,31 @@ bool UMainMenu::Initialize()
 {
 	bool bIsSuccess = Super::Initialize();
 	if (!bIsSuccess ||
-		!HostButton || !JoinButton || !JoinMenuButton || !ReturnToMainMenuButton || !QuitGameButton)
+		!HostMenuButton || !JoinMenuButton || !QuitGameButton ||
+		!HostButton || !HostMenuCancelButton ||
+		!JoinButton || !RefreshButton || !JoinMenuCancelButton)
 		return false;
 	
-	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);	
-	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
-
+	HostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OpenHostMenu);
 	JoinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
-	ReturnToMainMenuButton->OnClicked.AddDynamic(this, &UMainMenu::ReturnToMainMenu);
-
 	QuitGameButton->OnClicked.AddDynamic(this, &UMainMenu::QuitGame);
+	
+	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+	HostMenuCancelButton->OnClicked.AddDynamic(this, &UMainMenu::ReturnToMainMenu);
+	
+	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
+	RefreshButton->OnClicked.AddDynamic(this, &UMainMenu::RefreshServerList);
+	JoinMenuCancelButton->OnClicked.AddDynamic(this, &UMainMenu::ReturnToMainMenu);
 	
 	return true;
 }
 
 void UMainMenu::HostServer()
 {
-	if (MenuInterface)
+	if (MenuInterface != nullptr)
 	{
-		MenuInterface->Host();
+		const FString ServerName = ServerNameTextBox->GetText().ToString();
+		MenuInterface->Host(ServerName);
 	}	
 }
 
@@ -99,6 +106,11 @@ void UMainMenu::JoinServer()
 	}
 }
 
+void UMainMenu::OpenHostMenu()
+{
+	MenuSwitcher->SetActiveWidget(HostMenuWidget);
+}
+
 void UMainMenu::OpenJoinMenu()
 {
 	if (!MenuSwitcher || !JoinMenuWidget)
@@ -106,6 +118,14 @@ void UMainMenu::OpenJoinMenu()
 
 	MenuSwitcher->SetActiveWidget(JoinMenuWidget);
 
+	RefreshServerList();
+}
+
+void UMainMenu::RefreshServerList()
+{
+	if (!ServerList || !SessionsWaitWidget)
+		return;
+	
 	ServerList->ClearChildren();
 	SessionsWaitWidget->SetVisibility(ESlateVisibility::Visible);
 	

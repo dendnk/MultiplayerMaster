@@ -5,6 +5,9 @@
 #include "OnlineSessionSettings.h"
 
 
+const static FName GAME_SESSION_NAME = TEXT("My Session Game");
+const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
+
 UMultiplayerMasterGameInstance::UMultiplayerMasterGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -35,7 +38,6 @@ void UMultiplayerMasterGameInstance::Init()
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnDestroySessionComplete);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnFindSessionsComplete);
 			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnJoinSessionComplete);
-			
 		}
 	}
 	else
@@ -44,14 +46,15 @@ void UMultiplayerMasterGameInstance::Init()
 	}	
 }
 
-void UMultiplayerMasterGameInstance::Host()
+void UMultiplayerMasterGameInstance::Host(FString ServerName)
 {
+	DesiredServerName = ServerName;
 	if (SessionInterface.IsValid())
 	{
-		const auto ExistingSession = SessionInterface->GetNamedSession(GameSessionName);
+		const auto ExistingSession = SessionInterface->GetNamedSession(GAME_SESSION_NAME);
 		if (ExistingSession != nullptr)
 		{
-			SessionInterface->DestroySession(GameSessionName);
+			SessionInterface->DestroySession(GAME_SESSION_NAME);
 		}
 		else
 		{
@@ -77,7 +80,7 @@ void UMultiplayerMasterGameInstance::Join(uint32 Index)
 		MainMenuWidget->Hide();
 	}
 	
-	SessionInterface->JoinSession(0, GameSessionName, SessionSearch->SearchResults[Index]);
+	SessionInterface->JoinSession(0, GAME_SESSION_NAME, SessionSearch->SearchResults[Index]);
 }
 
 void UMultiplayerMasterGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
@@ -144,8 +147,9 @@ void UMultiplayerMasterGameInstance::CreateSession()
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
 		SessionSettings.bUseLobbiesIfAvailable = true;
+		SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		
-		SessionInterface->CreateSession(0, GameSessionName, SessionSettings);		
+		SessionInterface->CreateSession(0, GAME_SESSION_NAME, SessionSettings);		
 	}
 }
 
@@ -206,11 +210,20 @@ void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Result.GetSessionIdStr());
 			FServerData Data;
-			Data.Name = Result.GetSessionIdStr();
+			
 			Data.HostUsername = Result.Session.OwningUserName;
 			Data.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
 			Data.CurrentPlayers = Data.MaxPlayers - Result.Session.NumOpenPublicConnections;
 			Data.PingInMs = Result.PingInMs;
+			FString ServerName;
+			if (Result.Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, ServerName))
+			{
+				Data.Name = ServerName;
+			}
+			else
+			{
+				Data.Name = TEXT("Could not find name!");
+			}
 			
 			ServerDatas.Add(Data);
 		}

@@ -17,11 +17,6 @@ class MULTIPLAYERMASTER_API UMultiplayerMasterGameInstance
 	
 
 public:
-	UPROPERTY(EditAnywhere)
-	FName GameSessionName = TEXT("My Session Game");
-
-
-public:
 	UFUNCTION(BlueprintCallable)
 	void LoadMenuWidget();
 
@@ -31,7 +26,7 @@ public:
 
 public: // IMenuInterface
 	UFUNCTION(Exec)
-	void Host() override;
+	void Host(FString ServerName) override;
 
 	UFUNCTION(Exec)
 	void Join(uint32 Index) override;
@@ -49,6 +44,8 @@ private:
 
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
+
+	FString DesiredServerName;
 
 
 private:
