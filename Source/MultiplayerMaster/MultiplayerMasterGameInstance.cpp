@@ -175,7 +175,7 @@ void UMultiplayerMasterGameInstance::OnCreateSessionComplete(FName SessionName, 
 	if (!World)
 		return;
 
-	World->ServerTravel(TEXT("/Game/MultiplayerMaster/Maps/Map?listen"));
+	World->ServerTravel(TEXT("/Game/MultiplayerMaster/Maps/Lobby?listen"));
 }
 
 void UMultiplayerMasterGameInstance::OnDestroySessionComplete(FName SessionName, bool bSuccess)
