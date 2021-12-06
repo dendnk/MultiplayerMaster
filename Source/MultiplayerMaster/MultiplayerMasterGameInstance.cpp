@@ -34,15 +34,20 @@ void UMultiplayerMasterGameInstance::Init()
 		if (SessionInterface.IsValid())
 		{
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnCreateSessionComplete);
-			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnDestroySessionComplete);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnFindSessionsComplete);
 			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnJoinSessionComplete);
+			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMultiplayerMasterGameInstance::OnDestroySessionComplete);
 		}
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Found no susbsystem!"));
-	}	
+	}
+
+	if (GEngine != nullptr)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &UMultiplayerMasterGameInstance::OnNetworkFailure);
+	}
 }
 
 void UMultiplayerMasterGameInstance::Host(FString ServerName)
@@ -82,6 +87,63 @@ void UMultiplayerMasterGameInstance::Join(uint32 Index)
 	SessionInterface->JoinSession(0, NAME_GameSession , SessionSearch->SearchResults[Index]);
 }
 
+void UMultiplayerMasterGameInstance::LoadMainMenu()
+{	
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+	if (!PlayerController)
+		return;
+
+	if (PlayerController->HasAuthority())
+	{
+		auto World = GetWorld();
+		if (!World)
+			return;
+
+		World->ServerTravel(TEXT("/Game/MenuSystem/MainMenu"));
+	}
+	else
+	{
+		PlayerController->ClientTravel(TEXT("/Game/MenuSystem/MainMenu"), ETravelType::TRAVEL_Absolute);
+	}	   
+}
+
+void UMultiplayerMasterGameInstance::RefreshServerList()
+{
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	if (SessionSearch.IsValid())
+	{
+		SessionSearch->bIsLanQuery = true;
+		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+		UE_LOG(LogTemp, Warning, TEXT("Starting find session"));
+		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());	
+	}
+}
+
+void UMultiplayerMasterGameInstance::CreateSession()
+{
+	if (SessionInterface.IsValid())
+	{
+		FOnlineSessionSettings SessionSettings;
+		if (IOnlineSubsystem::Get()->GetSubsystemName() == TEXT("NULL"))
+		{
+			SessionSettings.bIsLANMatch = true;
+		}
+		else
+		{
+			SessionSettings.bIsLANMatch = false;
+		}
+		
+		SessionSettings.NumPublicConnections = 16;
+		SessionSettings.bShouldAdvertise = true;
+		SessionSettings.bUsesPresence = true;
+		SessionSettings.bUseLobbiesIfAvailable = true;
+		SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		
+		SessionInterface->CreateSession(0, NAME_GameSession , SessionSettings);		
+	}
+}
+
 void UMultiplayerMasterGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
 	if (!SessionInterface.IsValid())
@@ -108,50 +170,6 @@ void UMultiplayerMasterGameInstance::OnJoinSessionComplete(FName SessionName, EO
 	PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);	
 }
 
-void UMultiplayerMasterGameInstance::LoadMainMenu()
-{	
-	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (!PlayerController)
-		return;
-
-	if (PlayerController->HasAuthority())
-	{
-		auto World = GetWorld();
-		if (!World)
-			return;
-
-		World->ServerTravel(TEXT("/Game/MenuSystem/MainMenu"));
-	}
-	else
-	{
-		PlayerController->ClientTravel(TEXT("/Game/MenuSystem/MainMenu"), ETravelType::TRAVEL_Absolute);
-	}	   
-}
-
-void UMultiplayerMasterGameInstance::CreateSession()
-{
-	if (SessionInterface.IsValid())
-	{
-		FOnlineSessionSettings SessionSettings;
-		if (IOnlineSubsystem::Get()->GetSubsystemName() == TEXT("NULL"))
-		{
-			SessionSettings.bIsLANMatch = true;
-		}
-		else
-		{
-			SessionSettings.bIsLANMatch = false;
-		}
-		
-		SessionSettings.NumPublicConnections = 2;
-		SessionSettings.bShouldAdvertise = true;
-		SessionSettings.bUsesPresence = true;
-		SessionSettings.bUseLobbiesIfAvailable = true;
-		SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-		
-		SessionInterface->CreateSession(0, NAME_GameSession , SessionSettings);		
-	}
-}
-
 void UMultiplayerMasterGameInstance::OnCreateSessionComplete(FName SessionName, bool bSuccess)
 {
 	if (!bSuccess)
@@ -175,27 +193,6 @@ void UMultiplayerMasterGameInstance::OnCreateSessionComplete(FName SessionName, 
 		return;
 
 	World->ServerTravel(TEXT("/Game/MultiplayerMaster/Maps/Lobby?listen"));
-}
-
-void UMultiplayerMasterGameInstance::OnDestroySessionComplete(FName SessionName, bool bSuccess)
-{
-	if (bSuccess)
-	{
-		CreateSession();
-	}
-}
-
-void UMultiplayerMasterGameInstance::RefreshServerList()
-{
-	SessionSearch = MakeShareable(new FOnlineSessionSearch());
-	if (SessionSearch.IsValid())
-	{
-		SessionSearch->bIsLanQuery = true;
-		SessionSearch->MaxSearchResults = 100;
-		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
-		UE_LOG(LogTemp, Warning, TEXT("Starting find session"));
-		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());	
-	}
 }
 
 void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
@@ -231,6 +228,24 @@ void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
 	}
 }
 
+void UMultiplayerMasterGameInstance::OnDestroySessionComplete(FName SessionName, bool bSuccess)
+{
+	if (bSuccess)
+	{
+		CreateSession();
+	}
+}
+
+void UMultiplayerMasterGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver,
+	ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	if (GEngine != nullptr)
+	{
+		GEngine->AddOnScreenDebugMessage(-1,10.f,FColor::Purple, ErrorString);
+	}
+	LoadMainMenu();
+}
+
 void UMultiplayerMasterGameInstance::LoadMenuWidget()
 {
 	if (!MenuWidgetClass)
@@ -242,6 +257,14 @@ void UMultiplayerMasterGameInstance::LoadMenuWidget()
 
 	MainMenuWidget->Show();
 	MainMenuWidget->SetMenuInterface(this);
+}
+
+void UMultiplayerMasterGameInstance::StartSession()
+{
+	if (SessionInterface.IsValid())
+	{
+		SessionInterface->StartSession(NAME_GameSession);
+	}
 }
 
 void UMultiplayerMasterGameInstance::LoadGameMenu()

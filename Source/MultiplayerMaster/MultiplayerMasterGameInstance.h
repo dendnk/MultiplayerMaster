@@ -22,8 +22,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void LoadGameMenu();
+	
+	void StartSession();
 
-
+	
 public: // IMenuInterface
 	UFUNCTION(Exec)
 	void Host(FString ServerName) override;
@@ -51,9 +53,10 @@ private:
 private:
 	void CreateSession();
 	void OnCreateSessionComplete(FName SessionName, bool bSuccess);
-	void OnDestroySessionComplete(FName SessionName, bool bSuccess);
 	void OnFindSessionsComplete(bool bSuccess);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+	void OnDestroySessionComplete(FName SessionName, bool bSuccess);
+	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 	
 
 public:

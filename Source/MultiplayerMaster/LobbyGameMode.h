@@ -12,7 +12,15 @@ class MULTIPLAYERMASTER_API ALobbyGameMode : public AMultiplayerMasterGameMode
 	GENERATED_BODY()
 
 
+private:
+	FTimerHandle StartGameTimer;
+
+
 public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout( AController* Exiting ) override;
+
+
+private:
+	void StartGame();
 };
