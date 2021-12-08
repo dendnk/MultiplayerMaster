@@ -19,16 +19,19 @@ void ALobbyGameMode::Logout(AController* Exiting)
 
 void ALobbyGameMode::StartGame()
 {
-	auto GameInstance = Cast<UMultiplayerMasterGameInstance>(GetGameInstance());
-	if (GameInstance == nullptr)
-		return;
-
-	GameInstance->StartSession();
-	
-	const auto World = GetWorld();
-	if (World != nullptr)
+	if (GetNumPlayers() >= 2)
 	{
-		bUseSeamlessTravel = true; 
-		World->ServerTravel(TEXT("/Game/MultiplayerMaster/Maps/Map?listen"));			
+		auto GameInstance = Cast<UMultiplayerMasterGameInstance>(GetGameInstance());
+		if (GameInstance == nullptr)
+			return;
+
+		GameInstance->StartSession();
+	
+		const auto World = GetWorld();
+		if (World != nullptr)
+		{
+			bUseSeamlessTravel = true; 
+			World->ServerTravel(TEXT("/Game/MultiplayerMaster/Maps/Map?listen"));			
+		}	
 	}
 }
