@@ -42,7 +42,7 @@ void AMovingPlatfrom::Tick(float DeltaTime)
 			Location += Speed * DeltaTime * Direction;
 			SetActorLocation(Location);
 		}
-	}	
+	}
 }
 
 void AMovingPlatfrom::AddActiveTrigger()

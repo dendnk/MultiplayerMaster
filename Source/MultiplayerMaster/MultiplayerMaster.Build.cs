@@ -8,7 +8,7 @@ public class MultiplayerMaster : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] 
+		PublicDependencyModuleNames.AddRange(new string[]
 			{ "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay",
 				"UMG", "OnlineSubsystem", "OnlineSubsystemSteam" });
 	}

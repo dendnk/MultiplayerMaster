@@ -4,7 +4,7 @@
 #include "LobbyGameMode.generated.h"
 
 /**
- *  Lobby Game Mode 
+ *  Lobby Game Mode
  */
 UCLASS()
 class MULTIPLAYERMASTER_API ALobbyGameMode : public AMultiplayerMasterGameMode

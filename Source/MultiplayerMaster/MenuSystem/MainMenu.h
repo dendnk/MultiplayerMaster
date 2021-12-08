@@ -12,13 +12,13 @@ struct FServerData
 {
 	GENERATED_BODY()
 
-	
+
 	FString Name;
-	
+
 	uint16 CurrentPlayers;
-	
+
 	uint16 MaxPlayers;
-	
+
 	FString HostUsername;
 
 	int32 PingInMs;
@@ -28,7 +28,7 @@ struct FServerData
  * Main Menu Widget
  */
 UCLASS()
-class MULTIPLAYERMASTER_API UMainMenu 
+class MULTIPLAYERMASTER_API UMainMenu
 	: public UBaseMenuWidget
 {
 	GENERATED_BODY()
@@ -43,7 +43,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = MainMenu)
 	class UButton* HostMenuButton;
-	
+
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = MainMenu)
 	class UButton* JoinMenuButton;
 
@@ -52,13 +52,13 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
 	class UWidget* HostMenuWidget;
-	
+
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
 	class UEditableTextBox* ServerNameTextBox;
 
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
 	class UButton* HostButton;
-	
+
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = HostMenu)
 	class UButton* HostMenuCancelButton;
 
@@ -76,14 +76,14 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
 	class UButton* RefreshButton;
-	
+
 	UPROPERTY(VisibleAnywhere, Meta = (BindWidget), Category = JoinMenu)
 	class UButton* JoinMenuCancelButton;
 
 
 private:
 	TSubclassOf<class UUserWidget> ServerRowClass;
-	TOptional<uint32> SelectedIndex;	
+	TOptional<uint32> SelectedIndex;
 
 
 private:
@@ -95,13 +95,13 @@ private:
 
 	UFUNCTION()
 	void OpenHostMenu();
-	
+
 	UFUNCTION()
 	void OpenJoinMenu();
 
 	UFUNCTION()
 	void RefreshServerList();
-	
+
 	UFUNCTION()
 	void ReturnToMainMenu();
 
@@ -111,13 +111,13 @@ private:
 
 private:
 	void UpdateChildren();
-	
+
 
 public:
 	UMainMenu(const FObjectInitializer& ObjectInitializer);
 	void SetServerList(const TArray<FServerData>& ServerDatas);
 	void SelectIndex(uint32 Index);
-	
+
 
 protected:
 	virtual bool Initialize() override;

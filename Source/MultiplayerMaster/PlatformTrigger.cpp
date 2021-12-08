@@ -8,7 +8,7 @@ FName APlatformTrigger::TriggerVolumeName = FName(TEXT("TriggerVolume"));
 
 APlatformTrigger::APlatformTrigger(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-{ 	
+{
 	TriggerVolume = CreateDefaultSubobject<UBoxComponent>(TriggerVolumeName);
 	SetRootComponent(TriggerVolume);
 
@@ -20,7 +20,7 @@ APlatformTrigger::APlatformTrigger(const FObjectInitializer& ObjectInitializer)
 
 void APlatformTrigger::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
 }
 
 void APlatformTrigger::Tick(float DeltaTime)

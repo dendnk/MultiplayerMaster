@@ -6,11 +6,11 @@
 
 /**
  * Moving platform, that moves form origin position to target position and back.
- * Has active state if number of active triggers > 0. 
+ * Has active state if number of active triggers > 0.
  * Logic executes on server.
  */
 UCLASS()
-class MULTIPLAYERMASTER_API AMovingPlatfrom 
+class MULTIPLAYERMASTER_API AMovingPlatfrom
 	: public AStaticMeshActor
 {
 	GENERATED_BODY()
@@ -29,7 +29,7 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere)
-	int32 ActiveTriggers = 1;	
+	int32 ActiveTriggers = 1;
 
 
 public:
@@ -38,7 +38,7 @@ public:
 
 public:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;	
+	virtual void Tick(float DeltaTime) override;
 
 	void AddActiveTrigger();
 	void RemoveActiveTrigger();

@@ -10,11 +10,11 @@
  * Linked platforms must have property ActiveTriggers == 0.
  */
 UCLASS()
-class MULTIPLAYERMASTER_API APlatformTrigger 
+class MULTIPLAYERMASTER_API APlatformTrigger
 	: public AActor
 {
 	GENERATED_BODY()
-	
+
 
 private:
 	static FName TriggerVolumeName;

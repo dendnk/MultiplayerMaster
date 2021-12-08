@@ -27,7 +27,7 @@ void UServerRow::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 			else
 			{
 				ButtonColor = NonSelectedAndHoveredButtonColor;
-			}			
+			}
 		}
 		else
 		{
@@ -37,11 +37,11 @@ void UServerRow::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 			}
 			else
 			{
-				ButtonColor = NonSelectedAndNonHoveredButtonColor; 
+				ButtonColor = NonSelectedAndNonHoveredButtonColor;
 			}
 		}
 
-		RowButton->SetColorAndOpacity(ButtonColor);	
+		RowButton->SetColorAndOpacity(ButtonColor);
 	}
 }
 

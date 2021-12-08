@@ -9,12 +9,12 @@
  * Game Instance has logic for hosting/joining and widgets.
  */
 UCLASS()
-class MULTIPLAYERMASTER_API UMultiplayerMasterGameInstance 
+class MULTIPLAYERMASTER_API UMultiplayerMasterGameInstance
 	: public UGameInstance
 	, public IMenuInterface
 {
 	GENERATED_BODY()
-	
+
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -22,10 +22,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void LoadGameMenu();
-	
+
 	void StartSession();
 
-	
+
 public: // IMenuInterface
 	UFUNCTION(Exec)
 	void Host(FString ServerName) override;
@@ -34,7 +34,7 @@ public: // IMenuInterface
 	void Join(uint32 Index) override;
 
 	void LoadMainMenu() override;
-	void RefreshServerList() override;	
+	void RefreshServerList() override;
 
 
 private:
@@ -57,7 +57,7 @@ private:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(FName SessionName, bool bSuccess);
 	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
-	
+
 
 public:
 	UMultiplayerMasterGameInstance(const FObjectInitializer& ObjectInitializer);

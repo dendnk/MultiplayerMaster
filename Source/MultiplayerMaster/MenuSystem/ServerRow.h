@@ -5,7 +5,7 @@
 #include "ServerRow.generated.h"
 
 /**
- *  Server Row widget used for displaying sessions that was founded in join menu  
+ *  Server Row widget used for displaying sessions that was founded in join menu
  */
 UCLASS()
 class MULTIPLAYERMASTER_API UServerRow
@@ -29,7 +29,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bSelected = false;
-	
+
 	UPROPERTY(EditAnywhere)
 	bool bIsHeader = false;
 
@@ -49,7 +49,7 @@ public:
 private:
 	UPROPERTY(Meta = (BindWidget))
 	class UButton* RowButton;
-	
+
 	UPROPERTY()
 	class UMainMenu* Parent;
 

@@ -23,18 +23,18 @@ bool UMainMenu::Initialize()
 		!HostButton || !HostMenuCancelButton ||
 		!JoinButton || !RefreshButton || !JoinMenuCancelButton)
 		return false;
-	
+
 	HostMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OpenHostMenu);
 	JoinMenuButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
 	QuitGameButton->OnClicked.AddDynamic(this, &UMainMenu::QuitGame);
-	
+
 	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
 	HostMenuCancelButton->OnClicked.AddDynamic(this, &UMainMenu::ReturnToMainMenu);
-	
+
 	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
 	RefreshButton->OnClicked.AddDynamic(this, &UMainMenu::RefreshServerList);
 	JoinMenuCancelButton->OnClicked.AddDynamic(this, &UMainMenu::ReturnToMainMenu);
-	
+
 	return true;
 }
 
@@ -44,7 +44,7 @@ void UMainMenu::HostServer()
 	{
 		const FString ServerName = ServerNameTextBox->GetText().ToString();
 		MenuInterface->Host(ServerName);
-	}	
+	}
 }
 
 void UMainMenu::SetServerList(const TArray<FServerData>& ServerDatas)
@@ -65,14 +65,14 @@ void UMainMenu::SetServerList(const TArray<FServerData>& ServerDatas)
 
 		Row->ServerName->SetText(FText::FromString(ServerData.Name));
 		Row->HostUsername->SetText(FText::FromString(ServerData.HostUsername));
-		FString FractionString = FString::Printf(TEXT("%d / %d"),ServerData.CurrentPlayers, ServerData.MaxPlayers); 
+		FString FractionString = FString::Printf(TEXT("%d / %d"),ServerData.CurrentPlayers, ServerData.MaxPlayers);
 		Row->ConnectionFraction->SetText(FText::FromString(FractionString));
 		FString PingText = FString::Printf(TEXT("%d ms"), ServerData.PingInMs);
 		Row->Ping->SetText(FText::FromString(PingText));
-		
+
 		Row->Setup(this, Index++);
-		
-		ServerList->AddChild(Row);	
+
+		ServerList->AddChild(Row);
 	}
 }
 
@@ -125,10 +125,10 @@ void UMainMenu::RefreshServerList()
 {
 	if (!ServerList || !SessionsWaitWidget)
 		return;
-	
+
 	ServerList->ClearChildren();
 	SessionsWaitWidget->SetVisibility(ESlateVisibility::Visible);
-	
+
 	if (MenuInterface != nullptr)
 	{
 		MenuInterface->RefreshServerList();

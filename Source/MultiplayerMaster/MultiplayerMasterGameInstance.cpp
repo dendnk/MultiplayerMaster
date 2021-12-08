@@ -78,17 +78,17 @@ void UMultiplayerMasterGameInstance::Join(uint32 Index)
 		UE_LOG(LogTemp,Warning,TEXT("1) There are no search results from session search to join\n 2) Selected index not valid!"));
 		return;
 	}
-	
+
 	if (MainMenuWidget != nullptr)
 	{
 		MainMenuWidget->Hide();
 	}
-	
+
 	SessionInterface->JoinSession(0, NAME_GameSession , SessionSearch->SearchResults[Index]);
 }
 
 void UMultiplayerMasterGameInstance::LoadMainMenu()
-{	
+{
 	APlayerController* PlayerController = GetFirstLocalPlayerController();
 	if (!PlayerController)
 		return;
@@ -104,7 +104,7 @@ void UMultiplayerMasterGameInstance::LoadMainMenu()
 	else
 	{
 		PlayerController->ClientTravel(TEXT("/Game/MenuSystem/MainMenu"), ETravelType::TRAVEL_Absolute);
-	}	   
+	}
 }
 
 void UMultiplayerMasterGameInstance::RefreshServerList()
@@ -116,7 +116,7 @@ void UMultiplayerMasterGameInstance::RefreshServerList()
 		SessionSearch->MaxSearchResults = 100;
 		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		UE_LOG(LogTemp, Warning, TEXT("Starting find session"));
-		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());	
+		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
 }
 
@@ -133,14 +133,14 @@ void UMultiplayerMasterGameInstance::CreateSession()
 		{
 			SessionSettings.bIsLANMatch = false;
 		}
-		
+
 		SessionSettings.NumPublicConnections = 16;
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
 		SessionSettings.bUseLobbiesIfAvailable = true;
 		SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-		
-		SessionInterface->CreateSession(0, NAME_GameSession , SessionSettings);		
+
+		SessionInterface->CreateSession(0, NAME_GameSession , SessionSettings);
 	}
 }
 
@@ -150,7 +150,7 @@ void UMultiplayerMasterGameInstance::OnJoinSessionComplete(FName SessionName, EO
 		return;
 
 	FString Address;
-	
+
 	if (!SessionInterface->GetResolvedConnectString(SessionName, Address))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Could not get connect string!"));
@@ -160,14 +160,14 @@ void UMultiplayerMasterGameInstance::OnJoinSessionComplete(FName SessionName, EO
 	auto Engine = GetEngine();
 	if (!Engine)
 		return;
-	
-	Engine->AddOnScreenDebugMessage(0, 2.0f, FColor::Blue, FString::Printf(TEXT("Joining to : %s"), *Address));	
-	
+
+	Engine->AddOnScreenDebugMessage(0, 2.0f, FColor::Blue, FString::Printf(TEXT("Joining to : %s"), *Address));
+
 	APlayerController* PlayerController = GetFirstLocalPlayerController();
 	if (!PlayerController)
 		return;
-	
-	PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);	
+
+	PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 }
 
 void UMultiplayerMasterGameInstance::OnCreateSessionComplete(FName SessionName, bool bSuccess)
@@ -177,14 +177,14 @@ void UMultiplayerMasterGameInstance::OnCreateSessionComplete(FName SessionName, 
 		UE_LOG(LogTemp, Warning, TEXT("Could not create session!"));
 		return;
 	}
-	
+
 	if (MainMenuWidget != nullptr)
 	{
 		MainMenuWidget->Hide();
 	}
 
 	if (!GEngine)
-		return; 
+		return;
 
 	GEngine->AddOnScreenDebugMessage(0, 2.0f, FColor::Blue, TEXT("Hosting"));
 
@@ -200,13 +200,13 @@ void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
 	if (bSuccess && SessionSearch.IsValid() && MainMenuWidget != nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Finish find session"));
-		
+
 		TArray<FServerData> ServerDatas;
 		for (const auto& Result : SessionSearch->SearchResults)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Result.GetSessionIdStr());
 			FServerData Data;
-			
+
 			Data.HostUsername = Result.Session.OwningUserName;
 			Data.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
 			Data.CurrentPlayers = Data.MaxPlayers - Result.Session.NumOpenPublicConnections;
@@ -220,7 +220,7 @@ void UMultiplayerMasterGameInstance::OnFindSessionsComplete(bool bSuccess)
 			{
 				Data.Name = TEXT("Could not find name!");
 			}
-			
+
 			ServerDatas.Add(Data);
 		}
 

@@ -10,7 +10,7 @@ class UMenuInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/** 
+/**
  * Menu interface need to be implemented in game (in game instance)
  */
 class MULTIPLAYERMASTER_API IMenuInterface

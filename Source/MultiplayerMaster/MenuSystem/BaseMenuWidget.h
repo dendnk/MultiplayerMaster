@@ -8,11 +8,11 @@
  * Base menu widget - abstract base class for menu widgets
  */
 UCLASS()
-class MULTIPLAYERMASTER_API UBaseMenuWidget 
+class MULTIPLAYERMASTER_API UBaseMenuWidget
 	: public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 
 public:
 	void Show();
