@@ -16,7 +16,8 @@ void AVehiclePawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
-	Force += GetResistance();
+	Force += GetAirResistance();
+	Force += GetRollingResistance();
 
 	const FVector Acceleration = Force / Mass;
 
@@ -27,15 +28,29 @@ void AVehiclePawn::Tick(float DeltaTime)
 	UpdateLocationFromVelocity(DeltaTime);
 }
 
-FVector AVehiclePawn::GetResistance() const
+FVector AVehiclePawn::GetAirResistance() const
 {
 	return -Velocity.GetSafeNormal() * Velocity.SizeSquared() * DragCoefficient;
 }
 
+FVector AVehiclePawn::GetRollingResistance() const
+{
+	const auto World = GetWorld();
+	if (World == nullptr)
+		return FVector::ZeroVector;
+
+	const float AccelerationDueToGravity =  -World->GetGravityZ() / 100.f;
+	const float NormaForceMagnitude = Mass * AccelerationDueToGravity;
+
+	return -Velocity.GetSafeNormal() * RollingResistanceCoefficient * NormaForceMagnitude;
+}
+
 void AVehiclePawn::ApplyRotation(float DeltaTime)
 {
-	const float RotationAngle = MaxDegreesPerSecond * DeltaTime * SteeringThrow;
-	const FQuat RotationDelta(GetActorUpVector(), FMath::DegreesToRadians(RotationAngle));
+	const float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * DeltaTime;
+	/* DeltaAngleInRadians  = DeltaLocation / Radius */
+	const float RotationAngle = DeltaLocation / MinTurningRadius * SteeringThrow;
+	const FQuat RotationDelta(GetActorUpVector(), RotationAngle);
 
 	Velocity = RotationDelta.RotateVector(Velocity);
 

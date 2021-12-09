@@ -21,6 +21,14 @@ class MULTIPLAYERMASTER_API AVehiclePawn : public APawn
 	UPROPERTY(EditAnywhere)
 	float DragCoefficient = 16;
 
+	/** Higher means more rolling resistance. Ordinary car tires on concrete = 0.01 to 0.015. Dimensionless */
+	UPROPERTY(EditAnywhere)
+	float RollingResistanceCoefficient = 0.015f;
+
+	/** Minimum radius of the car turning circle at full lock (m) */
+	UPROPERTY(EditAnywhere)
+	float MinTurningRadius = 10;
+
 	/** The number of degrees rotated per second at full control throw (Degrees/s) */
 	UPROPERTY(EditAnywhere)
 	float MaxDegreesPerSecond = 90.f;
@@ -38,7 +46,9 @@ private:
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
-	FVector GetResistance() const;
+	FVector GetAirResistance() const;
+	FVector GetRollingResistance() const;
+
 	void ApplyRotation(float DeltaTime);
 	void UpdateLocationFromVelocity(float DeltaTime);
 
