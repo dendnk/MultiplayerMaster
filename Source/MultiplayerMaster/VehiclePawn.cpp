@@ -83,9 +83,31 @@ void AVehiclePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 void AVehiclePawn::MoveForward(float Value)
 {
 	Throttle = Value;
+	ServerMoveForward(Value);
+}
+
+void AVehiclePawn::ServerMoveForward_Implementation(float Value)
+{
+	Throttle = Value;
+}
+
+bool AVehiclePawn::ServerMoveForward_Validate(float Value)
+{
+	return FMath::Abs(Value) <= 1;
 }
 
 void AVehiclePawn::MoveRight(float Value)
 {
 	SteeringThrow = Value;
+	ServerMoveRight(Value);
+}
+
+void AVehiclePawn::ServerMoveRight_Implementation(float Value)
+{
+	SteeringThrow = Value;
+}
+
+bool AVehiclePawn::ServerMoveRight_Validate(float Value)
+{
+	return FMath::Abs(Value) <= 1;
 }

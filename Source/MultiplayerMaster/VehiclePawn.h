@@ -33,19 +33,24 @@ class MULTIPLAYERMASTER_API AVehiclePawn : public APawn
 	UPROPERTY(EditAnywhere)
 	float MaxDegreesPerSecond = 90.f;
 
+	
 	FVector Velocity;
 
 	float Throttle;
 	float SteeringThrow;
-
-
-public:
-	AVehiclePawn();
+	
 
 private:
 	void MoveForward(float Value);
-	void MoveRight(float Value);
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerMoveForward(float Value);
 
+	void MoveRight(float Value);
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerMoveRight(float Value);
+	
 	FVector GetAirResistance() const;
 	FVector GetRollingResistance() const;
 
@@ -58,6 +63,7 @@ protected:
 
 
 public:
+	AVehiclePawn();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };
