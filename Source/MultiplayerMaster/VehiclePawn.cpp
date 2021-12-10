@@ -1,31 +1,124 @@
 #include "VehiclePawn.h"
 
+#include "GameFramework/GameStateBase.h"
+#include "Net/UnrealNetwork.h"
+
 
 AVehiclePawn::AVehiclePawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+}
+
+void AVehiclePawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AVehiclePawn, ServerVehicleState);
 }
 
 void AVehiclePawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		NetUpdateFrequency = 1;
+	}
+}
+
+FVehicleMove AVehiclePawn::CreateMove(const float DeltaTime) const
+{
+	FVehicleMove Move;
+	Move.DeltaTime = DeltaTime;
+	Move.SteeringThrow = SteeringThrow;
+	Move.Throttle = Throttle;
+	Move.Time = GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
+
+	return Move;
 }
 
 void AVehiclePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		const FVehicleMove Move = CreateMove(DeltaTime);
+		SimulateMove(Move);
+
+		UnacknowledgedMoves.Add(Move);
+		ServerSendMove(Move);
+	}
+
+	/** We are the server and control of the pawn */
+	if (GetLocalRole() == ROLE_Authority && IsLocallyControlled())
+	{
+		const FVehicleMove Move = CreateMove(DeltaTime);
+		ServerSendMove(Move);
+	}
+
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		SimulateMove(ServerVehicleState.LastMove);
+	}
+}
+
+void AVehiclePawn::OnRep_VehicleState()
+{
+	SetActorTransform(ServerVehicleState.Transform);
+	Velocity = ServerVehicleState.Velocity;
+
+	ClearAcknowledgedMoves(ServerVehicleState.LastMove);
+
+	for (const auto& Move : UnacknowledgedMoves)
+	{
+		SimulateMove(Move);
+	}
+}
+
+void AVehiclePawn::ClearAcknowledgedMoves(const FVehicleMove LastMove)
+{
+	TArray<FVehicleMove> NewMoves;
+
+	for (const auto& Move : UnacknowledgedMoves)
+	{
+		if (Move.Time > LastMove.Time)
+		{
+			NewMoves.Add(Move);
+		}
+	}
+
+	UnacknowledgedMoves = NewMoves;
+}
+
+void AVehiclePawn::SimulateMove(const FVehicleMove& Move)
+{
+	FVector Force = GetActorForwardVector() * MaxDrivingForce * Move.Throttle;
 	Force += GetAirResistance();
 	Force += GetRollingResistance();
 
 	const FVector Acceleration = Force / Mass;
 
-	Velocity = Velocity + Acceleration * DeltaTime;
+	Velocity = Velocity + Acceleration * Move.DeltaTime;
 
-	ApplyRotation(DeltaTime);
+	ApplyRotation(Move.DeltaTime, Move.SteeringThrow);
 
-	UpdateLocationFromVelocity(DeltaTime);
+	UpdateLocationFromVelocity(Move.DeltaTime);
+}
+
+void AVehiclePawn::ServerSendMove_Implementation(const FVehicleMove Move)
+{
+	SimulateMove(Move);
+
+	ServerVehicleState.LastMove = Move;
+	ServerVehicleState.Transform = GetActorTransform();
+	ServerVehicleState.Velocity = Velocity;
+}
+
+bool AVehiclePawn::ServerSendMove_Validate(const FVehicleMove Move)
+{
+	return (FMath::Abs(Move.Throttle) <= 1)  && (FMath::Abs(Move.SteeringThrow) <= 1);
 }
 
 FVector AVehiclePawn::GetAirResistance() const
@@ -45,11 +138,11 @@ FVector AVehiclePawn::GetRollingResistance() const
 	return -Velocity.GetSafeNormal() * RollingResistanceCoefficient * NormaForceMagnitude;
 }
 
-void AVehiclePawn::ApplyRotation(float DeltaTime)
+void AVehiclePawn::ApplyRotation(const float DeltaTime, const float InSteeringThrow)
 {
 	const float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * DeltaTime;
 	/* DeltaAngleInRadians  = DeltaLocation / Radius */
-	const float RotationAngle = DeltaLocation / MinTurningRadius * SteeringThrow;
+	const float RotationAngle = DeltaLocation / MinTurningRadius * InSteeringThrow;
 	const FQuat RotationDelta(GetActorUpVector(), RotationAngle);
 
 	Velocity = RotationDelta.RotateVector(Velocity);
@@ -57,7 +150,7 @@ void AVehiclePawn::ApplyRotation(float DeltaTime)
 	AddActorWorldRotation(RotationDelta);
 }
 
-void AVehiclePawn::UpdateLocationFromVelocity(float DeltaTime)
+void AVehiclePawn::UpdateLocationFromVelocity(const float DeltaTime)
 {
 	const FVector Translation = Velocity * 100.f * DeltaTime;
 
@@ -80,34 +173,12 @@ void AVehiclePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	}
 }
 
-void AVehiclePawn::MoveForward(float Value)
-{
-	Throttle = Value;
-	ServerMoveForward(Value);
-}
-
-void AVehiclePawn::ServerMoveForward_Implementation(float Value)
+void AVehiclePawn::MoveForward(const float Value)
 {
 	Throttle = Value;
 }
 
-bool AVehiclePawn::ServerMoveForward_Validate(float Value)
-{
-	return FMath::Abs(Value) <= 1;
-}
-
-void AVehiclePawn::MoveRight(float Value)
+void AVehiclePawn::MoveRight(const float Value)
 {
 	SteeringThrow = Value;
-	ServerMoveRight(Value);
-}
-
-void AVehiclePawn::ServerMoveRight_Implementation(float Value)
-{
-	SteeringThrow = Value;
-}
-
-bool AVehiclePawn::ServerMoveRight_Validate(float Value)
-{
-	return FMath::Abs(Value) <= 1;
 }

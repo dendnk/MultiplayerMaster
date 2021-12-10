@@ -3,6 +3,40 @@
 #include "GameFramework/Pawn.h"
 #include "VehiclePawn.generated.h"
 
+USTRUCT()
+struct FVehicleMove
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float Throttle;
+
+	UPROPERTY()
+	float SteeringThrow;
+
+	UPROPERTY()
+	float DeltaTime;
+
+	UPROPERTY()
+	float Time;
+};
+
+USTRUCT()
+struct FVehicleState
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FTransform Transform;
+
+	UPROPERTY()
+	FVector Velocity;
+
+	UPROPERTY()
+	FVehicleMove LastMove;
+};
+
+
 UCLASS()
 class MULTIPLAYERMASTER_API AVehiclePawn : public APawn
 {
@@ -33,29 +67,36 @@ class MULTIPLAYERMASTER_API AVehiclePawn : public APawn
 	UPROPERTY(EditAnywhere)
 	float MaxDegreesPerSecond = 90.f;
 
-	
+	UPROPERTY(ReplicatedUsing = OnRep_VehicleState)
+	FVehicleState ServerVehicleState;
+
 	FVector Velocity;
 
 	float Throttle;
 	float SteeringThrow;
-	
+
+	TArray<FVehicleMove> UnacknowledgedMoves;
+
 
 private:
-	void MoveForward(float Value);
-	
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerMoveForward(float Value);
+	FVehicleMove CreateMove(const float DeltaTime) const;
+	void SimulateMove(const FVehicleMove& Move);
+	void ClearAcknowledgedMoves(const FVehicleMove LastMove);
 
-	void MoveRight(float Value);
-	
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerMoveRight(float Value);
-	
+	void ServerSendMove(const FVehicleMove Move);
+
+	UFUNCTION()
+	void OnRep_VehicleState();
+
 	FVector GetAirResistance() const;
 	FVector GetRollingResistance() const;
 
-	void ApplyRotation(float DeltaTime);
-	void UpdateLocationFromVelocity(float DeltaTime);
+	void ApplyRotation(const float DeltaTime, const float InSteeringThrow);
+	void UpdateLocationFromVelocity(const float DeltaTime);
+
+	void MoveForward(const float Value);
+	void MoveRight(const float Value);
 
 
 protected:
