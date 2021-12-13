@@ -48,7 +48,7 @@ class MULTIPLAYERMASTER_API UVehicleMovementComponent
 
 	/** Minimum radius of the car turning circle at full lock (m) */
 	UPROPERTY(EditAnywhere)
-	float MinTurningRadius = 3.f;
+	float MinTurningRadius = 5.f;
 
 	/** The number of degrees rotated per second at full control throw (Degrees/s) */
 	UPROPERTY(EditAnywhere)
@@ -59,18 +59,22 @@ class MULTIPLAYERMASTER_API UVehicleMovementComponent
 	float Throttle;
 	float SteeringThrow;
 
+	FVehicleMove LastMove;
+
 
 public:
-	FVehicleMove CreateMove(const float DeltaTime) const;
 	void SimulateMove(const FVehicleMove& Move);
 
 	FVector GetVelocity() const { return Velocity; }
 	void SetVelocity(const FVector& NewVelocity) { this->Velocity = NewVelocity; }
 	void SetThrottle(const float NewThrottle) {	this->Throttle = NewThrottle; }
 	void SetSteeringThrow(const float NewSteeringThrow) { this->SteeringThrow = NewSteeringThrow; }
+	FVehicleMove GetLastMove() const { return LastMove; }
 
 
 private:
+	FVehicleMove CreateMove(const float DeltaTime) const;
+
 	FVector GetAirResistance() const;
 	FVector GetRollingResistance() const;
 

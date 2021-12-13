@@ -16,7 +16,7 @@ class MULTIPLAYERMASTER_API AVehiclePawn
 private:
 	const static FName VehicleMovementComponentName;
 	const static FName VehicleMovementReplicatorName;
-	
+
 	UPROPERTY(VisibleAnywhere)
 	UVehicleMovementComponent* VehicleMovementComponent;
 

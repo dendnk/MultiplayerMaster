@@ -47,6 +47,8 @@ private:
 	UFUNCTION()
 	void OnRep_VehicleState();
 
+	void UpdateServerState(const FVehicleMove& Move);
+
 
 protected:
 	virtual void BeginPlay() override;

@@ -83,4 +83,16 @@ void UVehicleMovementComponent::BeginPlay()
 void UVehicleMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	bool bIsLocallyControlled = false;
+	if (const auto AsPawn = Cast<APawn>(GetOwner()))
+	{
+		bIsLocallyControlled = AsPawn->IsLocallyControlled();
+	}
+
+	if (GetOwnerRole() == ROLE_AutonomousProxy || (GetOwnerRole() == ROLE_Authority && bIsLocallyControlled))
+	{
+		LastMove = CreateMove(DeltaTime);
+		SimulateMove(LastMove);
+	}
 }

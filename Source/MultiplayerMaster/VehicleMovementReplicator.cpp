@@ -29,13 +29,12 @@ void UVehicleMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickT
 	if (VehicleMovementComponent == nullptr)
 		return;
 
+	const FVehicleMove LastMove = VehicleMovementComponent->GetLastMove();
+
 	if (GetOwnerRole() == ROLE_AutonomousProxy)
 	{
-		const FVehicleMove Move = VehicleMovementComponent->CreateMove(DeltaTime);
-		VehicleMovementComponent->SimulateMove(Move);
-
-		UnacknowledgedMoves.Add(Move);
-		ServerSendMove(Move);
+		UnacknowledgedMoves.Add(LastMove);
+		ServerSendMove(LastMove);
 	}
 
 	/** We are the server and control of the pawn */
@@ -48,8 +47,7 @@ void UVehicleMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickT
 
 	if (GetOwnerRole() == ROLE_Authority && bIsLocallyControlled)
 	{
-		const FVehicleMove Move = VehicleMovementComponent->CreateMove(DeltaTime);
-		ServerSendMove(Move);
+		UpdateServerState(LastMove);
 	}
 
 	if (GetOwnerRole() == ROLE_SimulatedProxy)
@@ -64,7 +62,7 @@ void UVehicleMovementReplicator::OnRep_VehicleState()
 
 	if (VehicleMovementComponent == nullptr)
 		return;
-	
+
 	VehicleMovementComponent->SetVelocity(ServerVehicleState.Velocity);
 
 	ClearAcknowledgedMoves(ServerVehicleState.LastMove);
@@ -73,6 +71,13 @@ void UVehicleMovementReplicator::OnRep_VehicleState()
 	{
 		VehicleMovementComponent->SimulateMove(Move);
 	}
+}
+
+void UVehicleMovementReplicator::UpdateServerState(const FVehicleMove& Move)
+{
+	ServerVehicleState.LastMove = Move;
+	ServerVehicleState.Transform = GetOwner()->GetActorTransform();
+	ServerVehicleState.Velocity = VehicleMovementComponent->GetVelocity();
 }
 
 void UVehicleMovementReplicator::ClearAcknowledgedMoves(const FVehicleMove LastMove)
@@ -94,12 +99,10 @@ void UVehicleMovementReplicator::ServerSendMove_Implementation(const FVehicleMov
 {
 	if (VehicleMovementComponent == nullptr)
 		return;
-	
+
 	VehicleMovementComponent->SimulateMove(Move);
 
-	ServerVehicleState.LastMove = Move;
-	ServerVehicleState.Transform = GetOwner()->GetActorTransform();
-	ServerVehicleState.Velocity = VehicleMovementComponent->GetVelocity();
+	UpdateServerState(Move);
 }
 
 bool UVehicleMovementReplicator::ServerSendMove_Validate(const FVehicleMove Move)
