@@ -1,25 +1,9 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "VehicleMovementComponent.h"
 #include "VehiclePawn.generated.h"
 
-USTRUCT()
-struct FVehicleMove
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	float Throttle;
-
-	UPROPERTY()
-	float SteeringThrow;
-
-	UPROPERTY()
-	float DeltaTime;
-
-	UPROPERTY()
-	float Time;
-};
 
 USTRUCT()
 struct FVehicleState
@@ -38,49 +22,29 @@ struct FVehicleState
 
 
 UCLASS()
-class MULTIPLAYERMASTER_API AVehiclePawn : public APawn
+class MULTIPLAYERMASTER_API AVehiclePawn
+	: public APawn
 {
 	GENERATED_BODY()
 
 
-	/** The mass of vehicle (kg) */
-	UPROPERTY(EditAnywhere)
-	float Mass = 1000.f;
+private:
+	const static FName VehicleMovementComponentName;
 
-	/** The force applied to the vehicle when throttle is fully down (Newtons) */
-	UPROPERTY(EditAnywhere)
-	float MaxDrivingForce = 10000.f;
 
-	/** Higher means more drag (kg/m). 16 means that maximum velocity = 25 m/s */
+public:
+	/**
+	 * Vehicle movement component with physics
+	 */
 	UPROPERTY(EditAnywhere)
-	float DragCoefficient = 16;
+	UVehicleMovementComponent* VehicleMovementComponent;
 
-	/** Higher means more rolling resistance. Ordinary car tires on concrete = 0.01 to 0.015. Dimensionless */
-	UPROPERTY(EditAnywhere)
-	float RollingResistanceCoefficient = 0.015f;
-
-	/** Minimum radius of the car turning circle at full lock (m) */
-	UPROPERTY(EditAnywhere)
-	float MinTurningRadius = 10;
-
-	/** The number of degrees rotated per second at full control throw (Degrees/s) */
-	UPROPERTY(EditAnywhere)
-	float MaxDegreesPerSecond = 90.f;
+	TArray<FVehicleMove> UnacknowledgedMoves;
 
 	UPROPERTY(ReplicatedUsing = OnRep_VehicleState)
 	FVehicleState ServerVehicleState;
 
-	FVector Velocity;
-
-	float Throttle;
-	float SteeringThrow;
-
-	TArray<FVehicleMove> UnacknowledgedMoves;
-
-
 private:
-	FVehicleMove CreateMove(const float DeltaTime) const;
-	void SimulateMove(const FVehicleMove& Move);
 	void ClearAcknowledgedMoves(const FVehicleMove LastMove);
 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -88,12 +52,6 @@ private:
 
 	UFUNCTION()
 	void OnRep_VehicleState();
-
-	FVector GetAirResistance() const;
-	FVector GetRollingResistance() const;
-
-	void ApplyRotation(const float DeltaTime, const float InSteeringThrow);
-	void UpdateLocationFromVelocity(const float DeltaTime);
 
 	void MoveForward(const float Value);
 	void MoveRight(const float Value);
@@ -104,7 +62,7 @@ protected:
 
 
 public:
-	AVehiclePawn();
+	AVehiclePawn(const FObjectInitializer& ObjectInitializer);
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };
