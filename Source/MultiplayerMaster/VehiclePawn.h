@@ -2,23 +2,8 @@
 
 #include "GameFramework/Pawn.h"
 #include "VehicleMovementComponent.h"
+#include "VehicleMovementReplicator.h"
 #include "VehiclePawn.generated.h"
-
-
-USTRUCT()
-struct FVehicleState
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FTransform Transform;
-
-	UPROPERTY()
-	FVector Velocity;
-
-	UPROPERTY()
-	FVehicleMove LastMove;
-};
 
 
 UCLASS()
@@ -30,28 +15,13 @@ class MULTIPLAYERMASTER_API AVehiclePawn
 
 private:
 	const static FName VehicleMovementComponentName;
-
-
-public:
-	/**
-	 * Vehicle movement component with physics
-	 */
-	UPROPERTY(EditAnywhere)
+	const static FName VehicleMovementReplicatorName;
+	
+	UPROPERTY(VisibleAnywhere)
 	UVehicleMovementComponent* VehicleMovementComponent;
 
-	TArray<FVehicleMove> UnacknowledgedMoves;
-
-	UPROPERTY(ReplicatedUsing = OnRep_VehicleState)
-	FVehicleState ServerVehicleState;
-
-private:
-	void ClearAcknowledgedMoves(const FVehicleMove LastMove);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSendMove(const FVehicleMove Move);
-
-	UFUNCTION()
-	void OnRep_VehicleState();
+	UPROPERTY(VisibleAnywhere)
+	UVehicleMovementReplicator* VehicleMovementReplicator;
 
 	void MoveForward(const float Value);
 	void MoveRight(const float Value);
