@@ -52,17 +52,31 @@ void UVehicleMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickT
 
 	if (GetOwnerRole() == ROLE_SimulatedProxy)
 	{
-		VehicleMovementComponent->SimulateMove(ServerVehicleState.LastMove);
+		ClientTick(DeltaTime);
 	}
 }
 
 void UVehicleMovementReplicator::OnRep_VehicleState()
 {
-	GetOwner()->SetActorTransform(ServerVehicleState.Transform);
+	switch (GetOwnerRole())
+	{
+	case ROLE_AutonomousProxy :
+		AutonomousProxy_OnRep_VehicleState();
+		break;
+	case ROLE_SimulatedProxy :
+		SimulatedProxy_OnRep_VehicleState();
+		break;
+	default :
+		break;
+	}
+}
 
+void UVehicleMovementReplicator::AutonomousProxy_OnRep_VehicleState()
+{
 	if (VehicleMovementComponent == nullptr)
 		return;
-
+	
+	GetOwner()->SetActorTransform(ServerVehicleState.Transform);
 	VehicleMovementComponent->SetVelocity(ServerVehicleState.Velocity);
 
 	ClearAcknowledgedMoves(ServerVehicleState.LastMove);
@@ -73,11 +87,42 @@ void UVehicleMovementReplicator::OnRep_VehicleState()
 	}
 }
 
+void UVehicleMovementReplicator::SimulatedProxy_OnRep_VehicleState()
+{
+	ClientTimeBetweenLastUpdates = ClientTimeSinceUpdate;
+	ClientTimeSinceUpdate = 0.f;
+
+	ClientStartTransform = GetOwner()->GetActorTransform();
+}
+
 void UVehicleMovementReplicator::UpdateServerState(const FVehicleMove& Move)
 {
 	ServerVehicleState.LastMove = Move;
 	ServerVehicleState.Transform = GetOwner()->GetActorTransform();
 	ServerVehicleState.Velocity = VehicleMovementComponent->GetVelocity();
+}
+
+void UVehicleMovementReplicator::ClientTick(float DeltaTime)
+{
+	ClientTimeSinceUpdate += DeltaTime;
+	
+	if (ClientTimeSinceUpdate < KINDA_SMALL_NUMBER)
+		return;
+
+	const FVector TargetLocation = ServerVehicleState.Transform.GetLocation();
+	const float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
+	const FVector StartLocation = ClientStartTransform.GetLocation();
+
+	const FVector NewLocation = FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
+
+	GetOwner()->SetActorLocation(NewLocation);
+
+	const FQuat TargetRotation = ServerVehicleState.Transform.GetRotation();
+	const FQuat StartRotation = ClientStartTransform.GetRotation();
+
+	const FQuat NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
+
+	GetOwner()->SetActorRotation(NewRotation);
 }
 
 void UVehicleMovementReplicator::ClearAcknowledgedMoves(const FVehicleMove LastMove)

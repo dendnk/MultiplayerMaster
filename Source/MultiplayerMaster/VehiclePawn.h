@@ -14,18 +14,18 @@ class MULTIPLAYERMASTER_API AVehiclePawn
 
 
 private:
-	const static FName VehicleMovementComponentName;
-	const static FName VehicleMovementReplicatorName;
+	const static FName VehicleMovementName;
+	const static FName VehicleReplicatorName;
+
+	
+	UPROPERTY(VisibleAnywhere)
+	UVehicleMovementComponent* VehicleMovement;
 
 	UPROPERTY(VisibleAnywhere)
-	UVehicleMovementComponent* VehicleMovementComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	UVehicleMovementReplicator* VehicleMovementReplicator;
+	UVehicleMovementReplicator* VehicleReplicator;
 
 	void MoveForward(const float Value);
 	void MoveRight(const float Value);
-
 
 protected:
 	virtual void BeginPlay() override;

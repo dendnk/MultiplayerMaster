@@ -30,6 +30,10 @@ class MULTIPLAYERMASTER_API UVehicleMovementReplicator
 	UPROPERTY()
 	UVehicleMovementComponent* VehicleMovementComponent;
 
+	float ClientTimeSinceUpdate;
+	float ClientTimeBetweenLastUpdates;
+	FTransform ClientStartTransform;
+
 
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_VehicleState)
@@ -46,8 +50,12 @@ private:
 
 	UFUNCTION()
 	void OnRep_VehicleState();
+	void AutonomousProxy_OnRep_VehicleState();
+	void SimulatedProxy_OnRep_VehicleState();
 
 	void UpdateServerState(const FVehicleMove& Move);
+
+	void ClientTick(float DeltaTime);
 
 
 protected:

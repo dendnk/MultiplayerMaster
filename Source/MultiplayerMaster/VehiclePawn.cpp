@@ -2,24 +2,25 @@
 #include "GameFramework/GameStateBase.h"
 
 
-const FName AVehiclePawn::VehicleMovementComponentName = TEXT("Vehicle Movement Component");
-const FName AVehiclePawn::VehicleMovementReplicatorName = TEXT("Vehicle Movement Replicator Component");
+const FName AVehiclePawn::VehicleMovementName = TEXT("Vehicle Movement");
+const FName AVehiclePawn::VehicleReplicatorName = TEXT("Vehicle Replicator");
 
 AVehiclePawn::AVehiclePawn(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	VehicleMovementComponent = CreateDefaultSubobject<UVehicleMovementComponent>(VehicleMovementComponentName);
-	VehicleMovementReplicator = CreateDefaultSubobject<UVehicleMovementReplicator>(VehicleMovementReplicatorName);
+	VehicleMovement = CreateDefaultSubobject<UVehicleMovementComponent>(VehicleMovementName);
+	VehicleReplicator = CreateDefaultSubobject<UVehicleMovementReplicator>(VehicleReplicatorName);
 
 	bReplicates = true;
+	SetReplicatingMovement(false);
 }
 
 void AVehiclePawn::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	if (HasAuthority())
 	{
 		NetUpdateFrequency = 1;
@@ -44,10 +45,16 @@ void AVehiclePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AVehiclePawn::MoveForward(const float Value)
 {
-	VehicleMovementComponent->SetThrottle(Value);
+	if (VehicleMovement == nullptr)
+		return;
+	
+	VehicleMovement->SetThrottle(Value);
 }
 
 void AVehiclePawn::MoveRight(const float Value)
 {
-	VehicleMovementComponent->SetSteeringThrow(Value);
+	if (VehicleMovement == nullptr)
+		return;
+	
+	VehicleMovement->SetSteeringThrow(Value);
 }
