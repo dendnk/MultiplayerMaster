@@ -15,7 +15,7 @@ class MULTIPLAYERMASTER_API AVehiclePawn
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UVehicleMovementComponent* VehicleMovement;
+	UVehicleMovementComponent* VehicleMovementComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UVehicleMovementReplicator* VehicleReplicator;

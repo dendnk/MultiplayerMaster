@@ -56,6 +56,8 @@ class MULTIPLAYERMASTER_API UVehicleMovementReplicator
 	FTransform ClientStartTransform;
 	FVector ClientStartVelocity;
 
+	float ClientSimulatedTime;
+
 
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_VehicleState)

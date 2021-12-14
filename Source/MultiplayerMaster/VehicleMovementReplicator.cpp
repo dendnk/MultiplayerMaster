@@ -1,4 +1,5 @@
 #include "VehicleMovementReplicator.h"
+#include "GameFramework/GameStateBase.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -198,6 +199,7 @@ void UVehicleMovementReplicator::ServerSendMove_Implementation(const FVehicleMov
 	if (VehicleMovementComponent == nullptr)
 		return;
 
+	ClientSimulatedTime += Move.DeltaTime;
 	VehicleMovementComponent->SimulateMove(Move);
 
 	UpdateServerState(Move);
@@ -205,5 +207,19 @@ void UVehicleMovementReplicator::ServerSendMove_Implementation(const FVehicleMov
 
 bool UVehicleMovementReplicator::ServerSendMove_Validate(const FVehicleMove Move)
 {
-	return (FMath::Abs(Move.Throttle) <= 1)  && (FMath::Abs(Move.SteeringThrow) <= 1);
+	const float ProposedClientTime = ClientSimulatedTime + Move.DeltaTime;
+	const bool ClientNotRunningAhead = ProposedClientTime < GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
+	if (!ClientNotRunningAhead)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client running too fast!"));
+		return false;
+	}
+	
+	if (!Move.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Received invalid move!"));
+		return false;
+	}
+	
+	return true;
 }
