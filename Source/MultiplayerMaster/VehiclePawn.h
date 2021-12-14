@@ -13,20 +13,22 @@ class MULTIPLAYERMASTER_API AVehiclePawn
 	GENERATED_BODY()
 
 
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UVehicleMovementComponent* VehicleMovement;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UVehicleMovementReplicator* VehicleReplicator;
+
+
 private:
 	const static FName VehicleMovementName;
 	const static FName VehicleReplicatorName;
-
 	
-	UPROPERTY(VisibleAnywhere)
-	UVehicleMovementComponent* VehicleMovement;
-
-	UPROPERTY(VisibleAnywhere)
-	UVehicleMovementReplicator* VehicleReplicator;
-
 	void MoveForward(const float Value);
 	void MoveRight(const float Value);
 
+	
 protected:
 	virtual void BeginPlay() override;
 

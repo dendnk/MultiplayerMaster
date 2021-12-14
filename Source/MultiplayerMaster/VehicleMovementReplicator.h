@@ -48,6 +48,9 @@ class MULTIPLAYERMASTER_API UVehicleMovementReplicator
 	UPROPERTY()
 	UVehicleMovementComponent* VehicleMovementComponent;
 
+	UPROPERTY()
+	USceneComponent* MeshOffsetRoot;
+
 	float ClientTimeSinceUpdate;
 	float ClientTimeBetweenLastUpdates;
 	FTransform ClientStartTransform;
@@ -78,9 +81,12 @@ private:
 
 	FHermiteCubicSpline CreateSpline();
 	float VelocityToDerivative() const;
-	void InterpolateSpline(const FHermiteCubicSpline& Spline, float LerpRatio) const;
+	void InterpolateLocation(const FHermiteCubicSpline& Spline, float LerpRatio) const;
 	void InterpolateVelocity(const FHermiteCubicSpline& Spline, float LerpRatio) const;
 	void InterpolateRotation(float LerpRatio) const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetMeshOffsetRoot(USceneComponent* Root) { MeshOffsetRoot = Root; }
 
 
 protected:

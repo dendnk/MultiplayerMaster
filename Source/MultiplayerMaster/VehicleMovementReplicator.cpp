@@ -95,8 +95,14 @@ void UVehicleMovementReplicator::SimulatedProxy_OnRep_VehicleState()
 	ClientTimeBetweenLastUpdates = ClientTimeSinceUpdate;
 	ClientTimeSinceUpdate = 0.f;
 
-	ClientStartTransform = GetOwner()->GetActorTransform();
+	if (MeshOffsetRoot != nullptr)
+	{
+		ClientStartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
+		ClientStartTransform.SetRotation(MeshOffsetRoot->GetComponentRotation().Quaternion());
+	}
 	ClientStartVelocity = ServerVehicleState.Velocity;
+
+	GetOwner()->SetActorTransform(ServerVehicleState.Transform);
 }
 
 void UVehicleMovementReplicator::UpdateServerState(const FVehicleMove& Move)
@@ -119,7 +125,7 @@ void UVehicleMovementReplicator::ClientTick(float DeltaTime)
 	const float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
 	FHermiteCubicSpline Spline = CreateSpline();
 	
-	InterpolateSpline(Spline, LerpRatio);
+	InterpolateLocation(Spline, LerpRatio);
 
 	InterpolateVelocity(Spline, LerpRatio);
 
@@ -142,11 +148,14 @@ float UVehicleMovementReplicator::VelocityToDerivative() const
 	return ClientTimeBetweenLastUpdates * 100; /* *100 Convert to cm from m */
 }
 
-void UVehicleMovementReplicator::InterpolateSpline(const FHermiteCubicSpline& Spline, float LerpRatio) const
+void UVehicleMovementReplicator::InterpolateLocation(const FHermiteCubicSpline& Spline, float LerpRatio) const
 {
 	const FVector NewLocation = Spline.InterpolateLocation(LerpRatio);
 	
-	GetOwner()->SetActorLocation(NewLocation);
+	if (MeshOffsetRoot != nullptr)
+	{
+		MeshOffsetRoot->SetWorldLocation(NewLocation);
+	}
 }
 
 void UVehicleMovementReplicator::InterpolateVelocity(const FHermiteCubicSpline& Spline, const float LerpRatio) const
@@ -162,8 +171,11 @@ void UVehicleMovementReplicator::InterpolateRotation(const float LerpRatio) cons
 	const FQuat TargetRotation = ServerVehicleState.Transform.GetRotation();
 	const FQuat StartRotation = ClientStartTransform.GetRotation();
 	const FQuat NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
-	
-	GetOwner()->SetActorRotation(NewRotation);
+
+	if (MeshOffsetRoot != nullptr)
+	{
+		MeshOffsetRoot->SetWorldRotation(NewRotation);
+	}
 }
 
 void UVehicleMovementReplicator::ClearAcknowledgedMoves(const FVehicleMove LastMove)
