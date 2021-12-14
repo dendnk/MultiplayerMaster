@@ -20,6 +20,24 @@ struct FVehicleState
 	FVehicleMove LastMove;
 };
 
+struct FHermiteCubicSpline
+{
+	FVector StartLocation;
+	FVector StartDerivative;
+	FVector TargetLocation;
+	FVector TargetDerivative;
+
+	FVector InterpolateLocation(const float LerpRatio) const
+	{
+		return FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	}
+	
+	FVector InterpolateDerivative(const float LerpRatio) const
+	{
+		return FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	}
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYERMASTER_API UVehicleMovementReplicator
 	: public UActorComponent
@@ -57,6 +75,12 @@ private:
 	void UpdateServerState(const FVehicleMove& Move);
 
 	void ClientTick(float DeltaTime);
+
+	FHermiteCubicSpline CreateSpline();
+	float VelocityToDerivative() const;
+	void InterpolateSpline(const FHermiteCubicSpline& Spline, float LerpRatio) const;
+	void InterpolateVelocity(const FHermiteCubicSpline& Spline, float LerpRatio) const;
+	void InterpolateRotation(float LerpRatio) const;
 
 
 protected:

@@ -116,25 +116,53 @@ void UVehicleMovementReplicator::ClientTick(float DeltaTime)
 	if (VehicleMovementComponent == nullptr)
 		return;
 
-	const FVector TargetLocation = ServerVehicleState.Transform.GetLocation();
 	const float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
-	const FVector StartLocation = ClientStartTransform.GetLocation();
-	const float VelocityToDerivative = ClientTimeBetweenLastUpdates * 100; /* *100 Convert to cm from m */
-	const FVector StartDerivative = ClientStartVelocity * VelocityToDerivative;
-	const FVector TargetDerivative = ServerVehicleState.Velocity * VelocityToDerivative;
+	FHermiteCubicSpline Spline = CreateSpline();
+	
+	InterpolateSpline(Spline, LerpRatio);
 
-	const FVector NewLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	InterpolateVelocity(Spline, LerpRatio);
+
+	InterpolateRotation(LerpRatio);
+}
+
+FHermiteCubicSpline UVehicleMovementReplicator::CreateSpline()
+{
+	FHermiteCubicSpline Spline;
+	Spline.TargetLocation = ServerVehicleState.Transform.GetLocation();
+	Spline.StartLocation = ClientStartTransform.GetLocation();
+	Spline.StartDerivative = ClientStartVelocity * VelocityToDerivative();
+	Spline.TargetDerivative = ServerVehicleState.Velocity * VelocityToDerivative();
+
+	return Spline;
+}
+
+float UVehicleMovementReplicator::VelocityToDerivative() const
+{
+	return ClientTimeBetweenLastUpdates * 100; /* *100 Convert to cm from m */
+}
+
+void UVehicleMovementReplicator::InterpolateSpline(const FHermiteCubicSpline& Spline, float LerpRatio) const
+{
+	const FVector NewLocation = Spline.InterpolateLocation(LerpRatio);
+	
 	GetOwner()->SetActorLocation(NewLocation);
+}
 
-	const FVector NewDerivative = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
-	const FVector NewVelocity = NewDerivative / VelocityToDerivative;
+void UVehicleMovementReplicator::InterpolateVelocity(const FHermiteCubicSpline& Spline, const float LerpRatio) const
+{
+	const FVector NewDerivative = Spline.InterpolateDerivative(LerpRatio);
+	const FVector NewVelocity = NewDerivative / VelocityToDerivative();
+	
 	VehicleMovementComponent->SetVelocity(NewVelocity);
+}
 
+void UVehicleMovementReplicator::InterpolateRotation(const float LerpRatio) const
+{
 	const FQuat TargetRotation = ServerVehicleState.Transform.GetRotation();
 	const FQuat StartRotation = ClientStartTransform.GetRotation();
-
 	const FQuat NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
-
+	
 	GetOwner()->SetActorRotation(NewRotation);
 }
 
