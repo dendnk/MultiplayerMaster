@@ -89,10 +89,14 @@ void UVehicleMovementReplicator::AutonomousProxy_OnRep_VehicleState()
 
 void UVehicleMovementReplicator::SimulatedProxy_OnRep_VehicleState()
 {
+	if (VehicleMovementComponent == nullptr)
+		return;
+	
 	ClientTimeBetweenLastUpdates = ClientTimeSinceUpdate;
 	ClientTimeSinceUpdate = 0.f;
 
 	ClientStartTransform = GetOwner()->GetActorTransform();
+	ClientStartVelocity = ServerVehicleState.Velocity;
 }
 
 void UVehicleMovementReplicator::UpdateServerState(const FVehicleMove& Move)
@@ -103,19 +107,28 @@ void UVehicleMovementReplicator::UpdateServerState(const FVehicleMove& Move)
 }
 
 void UVehicleMovementReplicator::ClientTick(float DeltaTime)
-{
+{	
 	ClientTimeSinceUpdate += DeltaTime;
 	
 	if (ClientTimeSinceUpdate < KINDA_SMALL_NUMBER)
 		return;
 
+	if (VehicleMovementComponent == nullptr)
+		return;
+
 	const FVector TargetLocation = ServerVehicleState.Transform.GetLocation();
 	const float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
 	const FVector StartLocation = ClientStartTransform.GetLocation();
+	const float VelocityToDerivative = ClientTimeBetweenLastUpdates * 100; /* *100 Convert to cm from m */
+	const FVector StartDerivative = ClientStartVelocity * VelocityToDerivative;
+	const FVector TargetDerivative = ServerVehicleState.Velocity * VelocityToDerivative;
 
-	const FVector NewLocation = FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
-
+	const FVector NewLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
 	GetOwner()->SetActorLocation(NewLocation);
+
+	const FVector NewDerivative = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	const FVector NewVelocity = NewDerivative / VelocityToDerivative;
+	VehicleMovementComponent->SetVelocity(NewVelocity);
 
 	const FQuat TargetRotation = ServerVehicleState.Transform.GetRotation();
 	const FQuat StartRotation = ClientStartTransform.GetRotation();

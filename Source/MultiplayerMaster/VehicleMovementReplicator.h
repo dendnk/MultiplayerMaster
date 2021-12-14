@@ -33,6 +33,7 @@ class MULTIPLAYERMASTER_API UVehicleMovementReplicator
 	float ClientTimeSinceUpdate;
 	float ClientTimeBetweenLastUpdates;
 	FTransform ClientStartTransform;
+	FVector ClientStartVelocity;
 
 
 public:
